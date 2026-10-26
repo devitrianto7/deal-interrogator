@@ -19,3 +19,13 @@ curl localhost:3000/api/ping
 ## Safety rails
 - `BUDGET_USD` (default 140): Meta has no hard spend cap, so every model call is priced from its `usage` and calls stop once the cap is hit (HTTP 402).
 - `RATE_LIMIT_PER_HOUR` (default 10) per IP on public endpoints (HTTP 429).
+
+## Evidence collection (S1)
+
+`POST /api/collect` with `{ "url": "<deal page>", "vendorUrl?": "...", "fresh?": true }` returns an evidence bundle:
+
+- **deal**: for AppSumo, parsed from the page's embedded data (plans, per-tier terms and features, FAQs, review stats) plus newest and all 1-3 star reviews from AppSumo's public reviews API. Other deal pages are read as text.
+- **docs**: the exact text of the deal page, vendor homepage, vendor pricing, terms of service and refund policy (found from homepage links, then common paths). Later steps quote only from these texts.
+- **warnings**: what could not be read (e.g. JavaScript-only vendor sites).
+
+Fetching is SSRF-guarded (public http(s) hosts only, re-checked on every redirect), time- and size-capped, and cached in `.data/cache/` for 24 h so demo deals replay identically. No model calls, so no budget spend.
