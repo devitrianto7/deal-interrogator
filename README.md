@@ -29,3 +29,12 @@ curl localhost:3000/api/ping
 - **warnings**: what could not be read (e.g. JavaScript-only vendor sites).
 
 Fetching is SSRF-guarded (public http(s) hosts only, re-checked on every redirect), time- and size-capped, and cached in `.data/cache/` for 24 h so demo deals replay identically. No model calls, so no budget spend.
+
+## Extraction (S2)
+
+`POST /api/extract` with `{ "url": "<deal page>" }` collects evidence, then makes two Spark calls in parallel:
+
+- **claims** from the deal page (seller's promises: lifetime, unlimited, per-tier limits, features, updates, refund, regular price);
+- **fine print** from the vendor's own pages (lifetime definition, usage caps, refund window, unilateral change, termination, support, regular price).
+
+Every item carries a quote. `src/lib/quotes.ts` checks each quote verbatim against the fetched text (normalizing only case, whitespace, curly quotes and dashes; `...` splits must match in order) and drops anything that does not match, listing it under `dropped`. The model never scores anything.
