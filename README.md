@@ -38,3 +38,10 @@ Fetching is SSRF-guarded (public http(s) hosts only, re-checked on every redirec
 - **fine print** from the vendor's own pages (lifetime definition, usage caps, refund window, unilateral change, termination, support, regular price).
 
 Every item carries a quote. `src/lib/quotes.ts` checks each quote verbatim against the fetched text (normalizing only case, whitespace, curly quotes and dashes; `...` splits must match in order) and drops anything that does not match, listing it under `dropped`. The model never scores anything.
+
+## Review mining (S3)
+
+Runs alongside extraction in `/api/extract` and returns `reviews`:
+
+- **Numbers from code**: rating distribution, share of 1-2 star reviews, and the newest-first page's average vs the all-time average (AppSumo's public reviews API serves one page of 20 newest, plus up to 20 per star rating; it does not paginate further).
+- **Themes from Spark**: support gone, limits shrunk, features paywalled, bugs, not as advertised, pricing/billing, and the positive ones. Each hit quotes the review verbatim and is checked against that review's text; hits from the product's earlier AppSumo campaigns are flagged.

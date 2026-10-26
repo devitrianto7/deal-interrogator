@@ -1,11 +1,12 @@
 import { collectEvidence, DealUnavailableError } from "@/lib/fetcher";
 import { FetchBlockedError } from "@/lib/fetcher/http";
 import { extract } from "@/lib/extract";
+import { analyzeReviews } from "@/lib/reviews";
 import { BudgetExceededError } from "@/lib/budget";
 import { clientIp, rateLimit } from "@/lib/ratelimit";
 
 // POST /api/extract { url, vendorUrl?, fresh? }
-// Collects evidence, then extracts claims + fine print with verbatim-checked quotes.
+// Collects evidence, then extracts claims + fine print and mines reviews, all with verbatim-checked quotes.
 export async function POST(req: Request) {
   const rl = rateLimit(clientIp(req));
   if (!rl.ok) return Response.json({ error: "rate_limited" }, { status: 429 });
@@ -20,12 +21,15 @@ export async function POST(req: Request) {
 
   try {
     const bundle = await collectEvidence(body.url, { fresh: !!body.fresh, vendorUrl: body.vendorUrl });
-    const extraction = await extract(bundle);
+    const [extraction, reviews] = await Promise.all([extract(bundle), analyzeReviews(bundle.deal)]);
     return Response.json({
       deal: { name: bundle.deal.name, url: bundle.deal.url, vendorUrl: bundle.deal.vendorUrl },
       sources: bundle.docs.map((d) => ({ kind: d.kind, url: d.url, chars: d.chars })),
       warnings: bundle.warnings,
       ...extraction,
+      reviews,
+      relatedDealIds: bundle.deal.relatedDealIds,
+      costUsd: extraction.costUsd + reviews.costUsd,
     });
   } catch (e) {
     if (e instanceof BudgetExceededError) return Response.json({ error: e.message }, { status: 402 });

@@ -22,8 +22,10 @@ const num = (v: unknown): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-function mapReview(c: any): DealReview {
+function mapReview(c: any, sample: DealReview["sample"]): DealReview {
   return {
+    sample,
+    dealId: num(c.deal_id),
     id: c.id,
     rating: num(c.rating),
     title: String(c.title ?? "").trim(),
@@ -94,13 +96,15 @@ export async function parseAppSumo(url: string, html: string): Promise<AppSumoPa
   ]);
   const base = newest.length ? newest : (pp.reviews?.comments ?? []);
   const seen = new Set<number>();
-  const all: any[] = [];
-  for (const c of [...base, ...r1, ...r2, ...r3]) {
-    if (seen.has(c.id)) continue;
-    seen.add(c.id);
-    all.push(c);
+  const all: { c: any; sample: DealReview["sample"] }[] = [];
+  for (const [list, sample] of [[base, "recent"], [[...r1, ...r2, ...r3], "critical"]] as const) {
+    for (const c of list) {
+      if (seen.has(c.id)) continue;
+      seen.add(c.id);
+      all.push({ c, sample });
+    }
   }
-  const relatedDealIds = [...new Set(all.map((c) => Number(c.deal_id)).filter((x) => x && x !== dealId))];
+  const relatedDealIds = [...new Set(all.map(({ c }) => Number(c.deal_id)).filter((x) => x && x !== dealId))];
 
   const deal: DealInfo = {
     platform: "appsumo",
@@ -118,7 +122,7 @@ export async function parseAppSumo(url: string, html: string): Promise<AppSumoPa
     commonFeatures,
     faqs,
     reviewStats,
-    reviews: all.map(mapReview),
+    reviews: all.map(({ c, sample }) => mapReview(c, sample)),
     relatedDealIds,
   };
 

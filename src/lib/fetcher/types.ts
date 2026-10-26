@@ -30,6 +30,8 @@ export interface DealReview {
   text: string;
   date: string;
   url?: string;
+  sample: "recent" | "critical"; // recent = newest-first page (unbiased); critical = 1-3 star filter
+  dealId: number | null; // AppSumo deal id; differs from the current deal for earlier campaigns
 }
 
 export interface DealInfo {
