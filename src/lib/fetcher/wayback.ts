@@ -62,18 +62,26 @@ export function captureBefore(url: string, asOf: string): Promise<{ ts: string; 
         const variants = [url];
         const u = new URL(url);
         if (u.pathname !== "/" && !u.search) variants.push(url.endsWith("/") ? url.slice(0, -1) : url + "/");
+        let failed = 0;
         for (const v of variants) {
           const rows = await cdxQuery(
             `url=${encodeURIComponent(v)}&to=${dayBefore(asOf)}&filter=statuscode%3A%5B23%5D..&fl=timestamp,original,statuscode&output=json&limit=-8`,
           );
+          if (rows == null) {
+            failed++;
+            continue;
+          }
           // Prefer the newest 200; fall back to the newest redirect (followed and re-checked below).
-          const caps = (rows ?? []).slice(1).filter((r) => r[0] < cutoff);
+          const caps = rows.slice(1).filter((r) => r[0] < cutoff);
           const best = [...caps].reverse().find((r) => r[2] === "200") ?? caps.at(-1);
           if (best) return { ts: best[0], original: best[1] };
         }
+        // An unreachable index is not the same as "never archived": fail loudly and don't cache it.
+        if (failed === variants.length) throw new Error("Wayback CDX index unavailable (rate-limited or down); retry later");
         return null;
       })(),
     );
+    cdxCache.get(key)!.catch(() => cdxCache.delete(key));
   }
   return cdxCache.get(key)!;
 }

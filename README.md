@@ -52,12 +52,19 @@ URL ─► 1 Collect ─► 2 Extract ─► 3 Verify quotes ─► 4 Score (cod
    0-30 Buy, 31-60 Wait, 61+ Skip. A **coverage guard** blocks a Buy when the terms couldn't be read: a missing ToS is not proof of safety.
 5. **Courtroom** (`src/lib/courtroom.ts`): up to 6 key claims go to trial. Prosecutor and Defender (Muse Spark) each file exhibits in parallel; exhibits are verified verbatim. The Judge (Muse Wonder) rules each claim *confirmed / contradicted / unverifiable*. Code downgrades any ruling that doesn't cite a verified exhibit from the winning side.
 
+## Backtest
+**Live:** https://deal.nogap.tech/backtest
+
+Would the engine have seen it coming? `POST /api/analyze` accepts `asOf: "YYYYMMDD"`: every page (deal, vendor home, pricing, terms, refund) is read from the newest Wayback Machine capture strictly before that day (raw `id_` mode; a redirect to a newer capture is rejected; no capture means missing, never a live fallback). Review stats come from the archived deal page; review texts from AppSumo's API only if written before the date and not edited after it. Domain age is measured at the as-of date. Code: `src/lib/fetcher/wayback.ts`.
+
+We ran 14 AppSumo deals that later shut down, revoked lifetime access or cut limits (dated AppSumo notices or buyer reports), 90 days before each event, plus 8 controls still healthy in Oct 2026, as of 1 Aug 2024. Production thresholds, no recalibration. Results (`src/backtest/results.json`): 6 of 13 scored failures scored above 30 (Wait on the evidence), 12 of 13 were not rated Buy (6 of those were set by evidence guards: unreadable terms, zero reviews, or unreachable vendor site, not by the score), 1 was rated Buy (Notice). Controls: 1 of 6 rated Buy, 3 of 6 scored above 30. At this sample size the score does not separate failures from survivors; the engine is cautious for both. 3 cases could not be scored because the Internet Archive rate-limited us mid-run. Total model spend for the backtest: about $1.
+
 ## Models (Meta Model API)
 - Judge: `muse-wonder-1.0`
 - Prosecutor / Defender / Extractor: `muse-spark-1.3-contributor`, or `muse-spark-1.3` with `MODEL_MODE=demo`
 
 ## API
-- `POST /api/analyze` `{ "url": "...", "vendorUrl?": "...", "fresh?": true }` → full report (risk, signals with receipts, claims, fine print, courtroom, reviews, trace, sources, cost)
+- `POST /api/analyze` `{ "url": "...", "vendorUrl?": "...", "fresh?": true, "asOf?": "YYYYMMDD" }` → full report (risk, signals with receipts, claims, fine print, courtroom, reviews, trace, sources, cost)
 - `POST /api/collect` → evidence bundle only
 - `POST /api/extract` → claims + fine print + reviews
 - `GET /api/ping` → model health check

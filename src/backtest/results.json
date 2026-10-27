@@ -1,0 +1,1409 @@
+{
+ "generatedAt": "2026-10-27T02:15:02.725854+00:00",
+ "modelSpendUsd": 0.6483,
+ "summary": {
+  "failed": {
+   "n": 13,
+   "errors": 1,
+   "Buy": 1,
+   "Wait": 11,
+   "Skip": 0,
+   "Unverified": 1,
+   "guards": {
+    "terms_unreadable": 3,
+    "no_reviews": 2,
+    "vendor_unreachable": 1
+   },
+   "flaggedOnScore": 6,
+   "meanScore": 30.7
+  },
+  "control": {
+   "n": 6,
+   "errors": 2,
+   "Buy": 1,
+   "Wait": 4,
+   "Skip": 0,
+   "Unverified": 1,
+   "guards": {
+    "terms_unreadable": 1,
+    "no_reviews": 0,
+    "vendor_unreachable": 1
+   },
+   "flaggedOnScore": 3,
+   "meanScore": 27.5
+  }
+ },
+ "cases": [
+  {
+   "slug": "notice",
+   "name": "Notice",
+   "group": "failed",
+   "eventType": "Revoked LTD",
+   "eventDate": "2025-05-14",
+   "event": "Notice stopped supporting lifetime access for AppSumo buyers (\"financial constraints\"); AppSumo offered credits.",
+   "source": "https://appsumo.com/products/notice/",
+   "asOf": "20250213",
+   "dealUrl": "https://appsumo.com/products/notice/",
+   "dealSnapshot": "https://web.archive.org/web/20240914081623/https://appsumo.com/products/notice/",
+   "capturedAt": "2024-09-14",
+   "leadDays": 242,
+   "vendorUrl": "https://notice.studio/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20240914081623/https://appsumo.com/products/notice/",
+     "capturedAt": "2024-09-14"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20250126105100/https://www.notice.studio/",
+     "capturedAt": "2025-01-26"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20250122215050/https://www.notice.studio/pricing",
+     "capturedAt": "2025-01-22"
+    },
+    {
+     "kind": "terms",
+     "url": "https://web.archive.org/web/20250122223723/https://www.notice.studio/terms-of-use",
+     "capturedAt": "2025-01-22"
+    }
+   ],
+   "score": 15,
+   "verdict": "Buy",
+   "verdictNote": null,
+   "missing": [],
+   "reviewCount": 37,
+   "guard": null,
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 15,
+     "max": 15,
+     "finding": "The deal says \"unlimited\", but the vendor's own pages meter usage.",
+     "quote": "- Optional add-on: Unlimited AI use for $5 per collaborator per month",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/notice/"
+    }
+   ],
+   "contradictedClaims": [],
+   "costUsd": 0.0264
+  },
+  {
+   "slug": "captaindata",
+   "name": "Captain Data",
+   "group": "failed",
+   "eventType": "Shut down",
+   "eventDate": "2025-09-24",
+   "event": "Original product (incl. AppSumo plans) announced to be discontinued on Dec 31, 2025.",
+   "source": "https://appsumo.com/products/captaindata/",
+   "asOf": "20250626",
+   "dealUrl": "https://appsumo.com/products/captaindata/",
+   "dealSnapshot": "https://web.archive.org/web/20221207150719/https://appsumo.com/products/captaindata/",
+   "capturedAt": "2022-12-07",
+   "leadDays": 1022,
+   "vendorUrl": "https://www.captaindata.co/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20221207150719/https://appsumo.com/products/captaindata/",
+     "capturedAt": "2022-12-07"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20250531064942/https://www.captaindata.com/",
+     "capturedAt": "2025-05-31"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20250620012751/https://www.captaindata.com/pricing",
+     "capturedAt": "2025-06-20"
+    },
+    {
+     "kind": "terms",
+     "url": "https://web.archive.org/web/20250622182442/https://www.captaindata.com/terms",
+     "capturedAt": "2025-06-22"
+    }
+   ],
+   "score": 26,
+   "verdict": "Wait",
+   "verdictNote": "The fine print looks clean (26/100), but there are no buyer reviews to show how the vendor treats lifetime customers, so this is not a Buy yet.",
+   "missing": [
+    "enough reviews (10+)"
+   ],
+   "reviewCount": 0,
+   "guard": "no_reviews",
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 15,
+     "max": 15,
+     "finding": "The deal says \"unlimited\", but the vendor's own pages meter usage.",
+     "quote": "Unlimited workflows",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/captaindata/"
+    },
+    {
+     "label": "One-sided change clauses",
+     "points": 6,
+     "max": 10,
+     "finding": "The terms let the vendor change the service.",
+     "quote": "The Client acknowledges and accepts that the Services, including their functionalities, may evolve during the Subscription Term.",
+     "quoteSource": "terms",
+     "quoteUrl": "https://web.archive.org/web/20250622182442/https://www.captaindata.com/terms"
+    },
+    {
+     "label": "Discount size",
+     "points": 5,
+     "max": 10,
+     "finding": "$89 vs a stated $708 regular price (87% off).",
+     "quote": "$89 (was $708)",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/captaindata/"
+    }
+   ],
+   "contradictedClaims": [
+    "Automate data extraction and enrichment from sources like LinkedIn and Google Maps"
+   ],
+   "costUsd": 0.044378
+  },
+  {
+   "slug": "cloudimage",
+   "name": "Cloudimage",
+   "group": "failed",
+   "eventType": "Shut down",
+   "eventDate": "2025-09-23",
+   "event": "Current product incl. AppSumo plans shut down Sep 30, 2025; no refunds, only a discount on new paid plans.",
+   "source": "https://appsumo.com/products/cloudimage/",
+   "asOf": "20250625",
+   "dealUrl": "https://appsumo.com/products/cloudimage/",
+   "error": "Wayback CDX index unavailable (rate-limited or down); retry later"
+  },
+  {
+   "slug": "vivomeetings",
+   "name": "Vivomeetings",
+   "group": "failed",
+   "eventType": "Shut down",
+   "eventDate": "2026-08-12",
+   "event": "Site went down and domain expired; AppSumo could not reach the team, no refunds (self-listed deal).",
+   "source": "https://appsumo.com/products/vivomeetings/",
+   "asOf": "20260514",
+   "dealUrl": "https://appsumo.com/products/vivomeetings/",
+   "dealSnapshot": "https://web.archive.org/web/20260216115321/https://appsumo.com/products/vivomeetings/",
+   "capturedAt": "2026-02-16",
+   "leadDays": 177,
+   "vendorUrl": "https://vivomeetings.com/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20260216115321/https://appsumo.com/products/vivomeetings/",
+     "capturedAt": "2026-02-16"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20260420163733/https://vivomeetings.com/",
+     "capturedAt": "2026-04-20"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20260420154426/https://vivomeetings.com/pricing/",
+     "capturedAt": "2026-04-20"
+    }
+   ],
+   "score": 16,
+   "verdict": "Wait",
+   "verdictNote": "Score is low, but the vendor terms of service could not be read, so the low score is not proof of safety.",
+   "missing": [
+    "vendor terms of service"
+   ],
+   "reviewCount": 75,
+   "guard": "terms_unreadable",
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 13,
+     "max": 15,
+     "finding": "Usage is metered (credits or quotas) on the vendor's pages. 2 reviews say limits were reduced.",
+     "quote": "Vivomeetings plan comes with unlimited recordings, real-time transcription, webinar mode and so much more.",
+     "quoteSource": "vendor_home",
+     "quoteUrl": "https://web.archive.org/web/20260420163733/https://vivomeetings.com/"
+    },
+    {
+     "label": "Review trend",
+     "points": 3,
+     "max": 10,
+     "finding": "Newest 5 reviews average 4.4/5 vs 4.75/5 all-time (-0.35).",
+     "quote": "75 reviews, average 4.75/5",
+     "quoteSource": "stats",
+     "quoteUrl": "https://appsumo.com/products/vivomeetings/"
+    }
+   ],
+   "contradictedClaims": [],
+   "costUsd": 0.03743
+  },
+  {
+   "slug": "bestever",
+   "name": "Bestever",
+   "group": "failed",
+   "eventType": "Shut down",
+   "eventDate": "2026-07-17",
+   "event": "Platform shutting down Aug 31, 2026 after acquisition (announced ~11 months after the deal launched).",
+   "source": "https://appsumo.com/products/bestever/",
+   "asOf": "20260418",
+   "dealUrl": "https://appsumo.com/products/bestever/",
+   "dealSnapshot": "https://web.archive.org/web/20251203164614/https://appsumo.com/products/bestever/",
+   "capturedAt": "2025-12-03",
+   "leadDays": 226,
+   "vendorUrl": "http://bestever.ai/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20251203164614/https://appsumo.com/products/bestever/",
+     "capturedAt": "2025-12-03"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20260309025820/https://www.bestever.ai/",
+     "capturedAt": "2026-03-09"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20260117220205/https://www.bestever.ai/pricing-plans",
+     "capturedAt": "2026-01-17"
+    }
+   ],
+   "score": 42,
+   "verdict": "Wait",
+   "verdictNote": null,
+   "missing": [
+    "vendor terms of service"
+   ],
+   "reviewCount": 25,
+   "guard": null,
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 15,
+     "max": 15,
+     "finding": "The deal says \"unlimited\", but the vendor's own pages meter usage. 4 reviews say limits were reduced.",
+     "quote": "- Unlimited Images per month",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/bestever/"
+    },
+    {
+     "label": "Support complaints",
+     "points": 15,
+     "max": 15,
+     "finding": "3 reviews (12.0% of all) say support is slow or gone.",
+     "quote": "One of those appsumo deals where you hardly ever hear from the vendor..",
+     "quoteSource": "review",
+     "quoteUrl": "https://appsumo.com/products/bestever/reviews/malfunctions-half-the-time-370756/"
+    },
+    {
+     "label": "Discount size",
+     "points": 5,
+     "max": 10,
+     "finding": "$49 vs a stated $480 regular price (90% off).",
+     "quote": "$49 (was $480)",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/bestever/"
+    }
+   ],
+   "contradictedClaims": [
+    "Lifetime access to Bestever",
+    "Enter competitor name to collect ads or choose from database with millions of campaigns"
+   ],
+   "costUsd": 0.035748
+  },
+  {
+   "slug": "stunning",
+   "name": "Stunning",
+   "group": "failed",
+   "eventType": "Cut limits",
+   "eventDate": "2026-01-29",
+   "event": "Lifetime plans lost their monthly AI credits; credits now sold separately (buyer report Jan 29, AppSumo notice Apr 24, 2026).",
+   "source": "https://appsumo.com/products/stunning/questions/question-for-the-community-and-stunning-1473026/",
+   "asOf": "20251031",
+   "dealUrl": "https://appsumo.com/products/stunning/",
+   "dealSnapshot": "https://web.archive.org/web/20250322052149/https://appsumo.com/products/stunning/",
+   "capturedAt": "2025-03-22",
+   "leadDays": 313,
+   "vendorUrl": "https://stunning.so/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20250322052149/https://appsumo.com/products/stunning/",
+     "capturedAt": "2025-03-22"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20251006011117/https://stunning.so/",
+     "capturedAt": "2025-10-06"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20250811204422/https://stunning.so/pricing",
+     "capturedAt": "2025-08-11"
+    },
+    {
+     "kind": "terms",
+     "url": "https://web.archive.org/web/20251006020239/https://stunning.so/terms",
+     "capturedAt": "2025-10-06"
+    }
+   ],
+   "score": 43,
+   "verdict": "Wait",
+   "verdictNote": null,
+   "missing": [],
+   "reviewCount": 29,
+   "guard": null,
+   "topSignals": [
+    {
+     "label": "Support complaints",
+     "points": 15,
+     "max": 15,
+     "finding": "2 reviews (6.9% of all) say support is slow or gone.",
+     "quote": "I've tried reaching out to support multiple times, but there has been no action or response.",
+     "quoteSource": "review",
+     "quoteUrl": "https://appsumo.com/products/stunning/reviews/lots-of-bugs-a-poor-website-and-text-w-345221/"
+    },
+    {
+     "label": "Hidden caps",
+     "points": 8,
+     "max": 15,
+     "finding": "2 reviews say limits were reduced.",
+     "quote": "you'll be limited to 1 widget per site!",
+     "quoteSource": "review",
+     "quoteUrl": "https://appsumo.com/products/stunning/reviews/its-not-at-all-clear-339992/"
+    },
+    {
+     "label": "Review trend",
+     "points": 6,
+     "max": 10,
+     "finding": "Newest 12 reviews average 3.58/5 vs 3.45/5 all-time (+0.13). 35% of all reviews are 1-2 stars.",
+     "quote": "29 reviews, average 3.45/5",
+     "quoteSource": "stats",
+     "quoteUrl": "https://appsumo.com/products/stunning/"
+    }
+   ],
+   "contradictedClaims": [
+    "Includes all future Business or Agency Plan updates",
+    "Previous customers grandfathered into new features and limits"
+   ],
+   "costUsd": 0.031697
+  },
+  {
+   "slug": "fable",
+   "name": "Fable",
+   "group": "failed",
+   "eventType": "Shut down",
+   "eventDate": "2025-12-31",
+   "event": "Platform shut down (Jan 2026, access extended to Feb 15, 2026) and open-sourced; no refunds.",
+   "source": "https://appsumo.com/products/fable/",
+   "asOf": "20250902",
+   "dealUrl": "https://appsumo.com/products/fable/",
+   "dealSnapshot": "https://web.archive.org/web/20250624223411/https://appsumo.com/products/fable/",
+   "capturedAt": "2025-06-24",
+   "leadDays": 190,
+   "vendorUrl": "https://www.sharefable.com/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20250624223411/https://appsumo.com/products/fable/",
+     "capturedAt": "2025-06-24"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20250708010926/https://www.sharefable.com/?",
+     "capturedAt": "2025-07-08"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20241211184102/https://www.sharefable.com/pricing?ref=nav_bar",
+     "capturedAt": "2024-12-11"
+    },
+    {
+     "kind": "terms",
+     "url": "https://web.archive.org/web/20250314164019/https://www.sharefable.com/terms-of-service?ref=footer",
+     "capturedAt": "2025-03-14"
+    }
+   ],
+   "score": 51,
+   "verdict": "Wait",
+   "verdictNote": null,
+   "missing": [],
+   "reviewCount": 58,
+   "guard": null,
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 15,
+     "max": 15,
+     "finding": "The deal says \"unlimited\", but the vendor's own pages meter usage.",
+     "quote": "- Unlimited Creator(s)",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/fable/"
+    },
+    {
+     "label": "Support complaints",
+     "points": 15,
+     "max": 15,
+     "finding": "4 reviews (6.9% of all) say support is slow or gone.",
+     "quote": "it has zero support / all communication pathways for support have been removed.",
+     "quoteSource": "review",
+     "quoteUrl": "https://appsumo.com/products/fable/reviews/ghosted-356716/"
+    },
+    {
+     "label": "Review trend",
+     "points": 10,
+     "max": 10,
+     "finding": "Newest 6 reviews average 2.5/5 vs 4.69/5 all-time (-2.19).",
+     "quote": "58 reviews, average 4.69/5",
+     "quoteSource": "stats",
+     "quoteUrl": "https://appsumo.com/products/fable/"
+    }
+   ],
+   "contradictedClaims": [
+    "Includes all future Startup or Business Plan updates",
+    "Previous AppSumo customers are grandfathered into new features and limits"
+   ],
+   "costUsd": 0.030569
+  },
+  {
+   "slug": "luna",
+   "name": "Luna",
+   "group": "failed",
+   "eventType": "Revoked LTD",
+   "eventDate": "2025-02-27",
+   "event": "All lifetime accounts closed effective Mar 15, 2025; not covered by AppSumo's guarantee.",
+   "source": "https://appsumo.com/products/luna/",
+   "asOf": "20241129",
+   "dealUrl": "https://appsumo.com/products/luna/",
+   "dealSnapshot": "https://web.archive.org/web/20230724163644/https://appsumo.com/products/luna",
+   "capturedAt": "2023-07-24",
+   "leadDays": 584,
+   "vendorUrl": "https://getluna.dev/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20230724163644/https://appsumo.com/products/luna",
+     "capturedAt": "2023-07-24"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20240623061201/https://www.luna.ai/",
+     "capturedAt": "2024-06-23"
+    },
+    {
+     "kind": "terms",
+     "url": "https://web.archive.org/web/20241116173121/https://www.luna.ai/terms",
+     "capturedAt": "2024-11-16"
+    }
+   ],
+   "score": 15,
+   "verdict": "Wait",
+   "verdictNote": "The fine print looks clean (15/100), but there are no buyer reviews to show how the vendor treats lifetime customers, so this is not a Buy yet.",
+   "missing": [
+    "vendor pricing page",
+    "enough reviews (10+)"
+   ],
+   "reviewCount": 0,
+   "guard": "no_reviews",
+   "topSignals": [
+    {
+     "label": "One-sided change clauses",
+     "points": 10,
+     "max": 10,
+     "finding": "The terms let the vendor change features or pricing at any time.",
+     "quote": "Utopian, Inc. keeps its right to change the amount of the fee at any time.",
+     "quoteSource": "terms",
+     "quoteUrl": "https://web.archive.org/web/20241116173121/https://www.luna.ai/terms"
+    },
+    {
+     "label": "Hidden caps",
+     "points": 5,
+     "max": 15,
+     "finding": "Usage is metered (credits or quotas) on the vendor's pages.",
+     "quote": "Start forever free plan Setup is quick and easy 100 Free Emails /PM No Credit Card Required",
+     "quoteSource": "vendor_home",
+     "quoteUrl": "https://web.archive.org/web/20240623061201/https://www.luna.ai/"
+    }
+   ],
+   "contradictedClaims": [
+    "60 day money-back guarantee, try for 2 months"
+   ],
+   "costUsd": 0.040565
+  },
+  {
+   "slug": "storipress",
+   "name": "Storipress",
+   "group": "failed",
+   "eventType": "Shut down",
+   "eventDate": "2024-09-17",
+   "event": "Access ended Nov 15, 2024 (\"changing market and lack of resources\").",
+   "source": "https://appsumo.com/products/storipress/",
+   "asOf": "20240619",
+   "dealUrl": "https://appsumo.com/products/storipress/",
+   "dealSnapshot": "https://web.archive.org/web/20240406190014/https://appsumo.com/products/storipress/",
+   "capturedAt": "2024-04-06",
+   "leadDays": 164,
+   "vendorUrl": "https://storipress.com/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20240406190014/https://appsumo.com/products/storipress/",
+     "capturedAt": "2024-04-06"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20240618141709/https://storipress.com/",
+     "capturedAt": "2024-06-18"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20240509122759/https://storipress.com/pricing.html",
+     "capturedAt": "2024-05-09"
+    },
+    {
+     "kind": "terms",
+     "url": "https://web.archive.org/web/20240301151305/https://storipress.com/legal/terms",
+     "capturedAt": "2024-03-01"
+    }
+   ],
+   "score": 40,
+   "verdict": "Wait",
+   "verdictNote": null,
+   "missing": [],
+   "reviewCount": 54,
+   "guard": null,
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 15,
+     "max": 15,
+     "finding": "The deal says \"unlimited\", but the vendor's own pages meter usage.",
+     "quote": "And with unlimited generations in Storipress AI, even if you don\u2019t have a content team, the GPT-4 technology can write an article for you",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/storipress/"
+    },
+    {
+     "label": "Lifetime definition",
+     "points": 10,
+     "max": 20,
+     "finding": "The vendor may discontinue the product, which ends a lifetime deal.",
+     "quote": "Storipress shall not be liable to you or to any third party for any modification, price change, suspension, or discontinuance of the Service.",
+     "quoteSource": "terms",
+     "quoteUrl": "https://web.archive.org/web/20240301151305/https://storipress.com/legal/terms"
+    },
+    {
+     "label": "One-sided change clauses",
+     "points": 10,
+     "max": 10,
+     "finding": "The terms let the vendor change features or pricing at any time.",
+     "quote": "Prices of the Service are subject to change upon 30 days notice from us, and such notice may be provided at any time by posting the changes to the Storipress Site or the Service itself.",
+     "quoteSource": "terms",
+     "quoteUrl": "https://web.archive.org/web/20240301151305/https://storipress.com/legal/terms"
+    }
+   ],
+   "contradictedClaims": [
+    "All-in-one CMS to build and manage a digital publication",
+    "Professional media publishing platform to optimize and scale content business"
+   ],
+   "costUsd": 0.03885
+  },
+  {
+   "slug": "illusto",
+   "name": "illusto",
+   "group": "failed",
+   "eventType": "Shut down",
+   "eventDate": "2025-01-03",
+   "event": "Platform discontinued Jan 3, 2025.",
+   "source": "https://appsumo.com/products/illusto/",
+   "asOf": "20241005",
+   "dealUrl": "https://appsumo.com/products/illusto/",
+   "dealSnapshot": "https://web.archive.org/web/20231204050653/https://appsumo.com/products/illusto/",
+   "capturedAt": "2023-12-04",
+   "leadDays": 396,
+   "vendorUrl": "https://illusto.com/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20231204050653/https://appsumo.com/products/illusto/",
+     "capturedAt": "2023-12-04"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20240916045255/https://illusto.com/",
+     "capturedAt": "2024-09-16"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20240713183322/https://illusto.com/pricing/",
+     "capturedAt": "2024-07-13"
+    },
+    {
+     "kind": "terms",
+     "url": "https://web.archive.org/web/20240916071417/https://illusto.com/terms/",
+     "capturedAt": "2024-09-16"
+    }
+   ],
+   "score": 32,
+   "verdict": "Wait",
+   "verdictNote": null,
+   "missing": [],
+   "reviewCount": 39,
+   "guard": null,
+   "topSignals": [
+    {
+     "label": "Support complaints",
+     "points": 15,
+     "max": 15,
+     "finding": "2 reviews (5.1% of all) say support is slow or gone.",
+     "quote": "I had raised this issue a long time ago but till date heard nothing.",
+     "quoteSource": "review",
+     "quoteUrl": "https://appsumo.com/products/illusto/reviews/not-very-happy-303668/"
+    },
+    {
+     "label": "Review trend",
+     "points": 6,
+     "max": 10,
+     "finding": "Newest 12 reviews average 3.75/5 vs 4.69/5 all-time (-0.94).",
+     "quote": "39 reviews, average 4.69/5",
+     "quoteSource": "stats",
+     "quoteUrl": "https://appsumo.com/products/illusto/"
+    },
+    {
+     "label": "One-sided change clauses",
+     "points": 6,
+     "max": 10,
+     "finding": "The terms let the vendor change the service.",
+     "quote": "Your use of the Platform is subject to the Terms and Conditions, which may be updated, amended, modified, or revised by us from time to time.",
+     "quoteSource": "terms",
+     "quoteUrl": "https://web.archive.org/web/20240916071417/https://illusto.com/terms/"
+    }
+   ],
+   "contradictedClaims": [
+    "All future Essential or Business Plan updates included",
+    "Create videos with ready-made templates for different industries, themes, and topics"
+   ],
+   "costUsd": 0.04125
+  },
+  {
+   "slug": "pulse",
+   "name": "Pulse (Blitzllama)",
+   "group": "failed",
+   "eventType": "Shut down",
+   "eventDate": "2026-01-15",
+   "event": "Pulse sunset on Feb 28, 2026 (announced Jan 15, 2026).",
+   "source": "https://appsumo.com/products/pulse/",
+   "asOf": "20251017",
+   "dealUrl": "https://appsumo.com/products/pulse/",
+   "dealSnapshot": "https://web.archive.org/web/20250917090100/https://appsumo.com/products/pulse/",
+   "capturedAt": "2025-09-17",
+   "leadDays": 120,
+   "vendorUrl": "https://www.blitzllama.com/pulse",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20250917090100/https://appsumo.com/products/pulse/",
+     "capturedAt": "2025-09-17"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20250121042149/https://www.blitzllama.com/pulse",
+     "capturedAt": "2025-01-21"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20241213110942/https://www.blitzllama.com/pricing",
+     "capturedAt": "2024-12-13"
+    }
+   ],
+   "score": 15,
+   "verdict": "Wait",
+   "verdictNote": "Score is low, but the vendor terms of service, enough reviews (10+) could not be read, so the low score is not proof of safety.",
+   "missing": [
+    "vendor terms of service",
+    "enough reviews (10+)"
+   ],
+   "reviewCount": 0,
+   "guard": "terms_unreadable",
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 15,
+     "max": 15,
+     "finding": "The deal says \"unlimited\", but the vendor's own pages meter usage.",
+     "quote": "- Unlimited Monthly responses",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/pulse/"
+    }
+   ],
+   "contradictedClaims": [],
+   "costUsd": 0.023254
+  },
+  {
+   "slug": "webtotem",
+   "name": "WebTotem",
+   "group": "failed",
+   "eventType": "Revoked LTD",
+   "eventDate": "2026-01-17",
+   "event": "Original product shut down with 6 days' notice; new version requires a subscription, LTD not carried over.",
+   "source": "https://appsumo.com/products/webtotem/reviews/lifetime-deal-ended-with-6-days-notice-372098/",
+   "asOf": "20251019",
+   "dealUrl": "https://appsumo.com/products/webtotem/",
+   "dealSnapshot": "https://web.archive.org/web/20250911005056/https://appsumo.com/products/webtotem/",
+   "capturedAt": "2025-09-11",
+   "leadDays": 128,
+   "vendorUrl": "https://wtotem.com/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20250911005056/https://appsumo.com/products/webtotem/",
+     "capturedAt": "2025-09-11"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20251017034448/https://wtotem.com/",
+     "capturedAt": "2025-10-17"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20250322093927/https://wtotem.com/pricing/",
+     "capturedAt": "2025-03-22"
+    },
+    {
+     "kind": "terms",
+     "url": "https://web.archive.org/web/20251017035115/https://wtotem.com/terms/",
+     "capturedAt": "2025-10-17"
+    }
+   ],
+   "score": 56,
+   "verdict": "Wait",
+   "verdictNote": null,
+   "missing": [],
+   "reviewCount": 87,
+   "guard": null,
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 15,
+     "max": 15,
+     "finding": "The deal says \"unlimited\", but the vendor's own pages meter usage.",
+     "quote": "- Unlimited websites",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/webtotem/"
+    },
+    {
+     "label": "Support complaints",
+     "points": 15,
+     "max": 15,
+     "finding": "3 reviews (3.4% of all) say support is slow or gone.",
+     "quote": "I sent messages to their support for MONTHS.",
+     "quoteSource": "review",
+     "quoteUrl": "https://appsumo.com/products/webtotem/reviews/its-just-okay-but-doesnt-work-with-ezo-187050/"
+    },
+    {
+     "label": "Discount size",
+     "points": 10,
+     "max": 10,
+     "finding": "$69 vs a stated $3600 regular price (98% off).",
+     "quote": "$69 (was $3600)",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/webtotem/"
+    }
+   ],
+   "contradictedClaims": [],
+   "costUsd": 0.032747
+  },
+  {
+   "slug": "adilo",
+   "name": "Adilo",
+   "group": "failed",
+   "eventType": "Revoked LTD",
+   "eventDate": "2025-09-16",
+   "event": "Lifetime accounts forced onto subscriptions or lose access (first reports Sep 2025, wide notice Nov 2025).",
+   "source": "https://www.trustpilot.com/review/adilo.com",
+   "asOf": "20250618",
+   "dealUrl": "https://appsumo.com/products/adilo/",
+   "dealSnapshot": "https://web.archive.org/web/20250208003011/https://appsumo.com/products/adilo/",
+   "capturedAt": "2025-02-08",
+   "leadDays": 220,
+   "vendorUrl": "https://adilo.com/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20250208003011/https://appsumo.com/products/adilo/",
+     "capturedAt": "2025-02-08"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20250605062017/https://adilo.com/",
+     "capturedAt": "2025-06-05"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20250426062241/https://adilo.com/pricing",
+     "capturedAt": "2025-04-26"
+    }
+   ],
+   "score": 27,
+   "verdict": "Wait",
+   "verdictNote": "Score is low, but the vendor terms of service could not be read, so the low score is not proof of safety.",
+   "missing": [
+    "vendor terms of service"
+   ],
+   "reviewCount": 987,
+   "guard": "terms_unreadable",
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 15,
+     "max": 15,
+     "finding": "The deal says \"unlimited\", but the vendor's own pages meter usage. 3 reviews say limits were reduced.",
+     "quote": "- Unlimited storage",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/adilo/"
+    },
+    {
+     "label": "Discount size",
+     "points": 5,
+     "max": 10,
+     "finding": "$79 vs a stated $468 regular price (83% off).",
+     "quote": "$79 (was $468)",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/adilo/"
+    },
+    {
+     "label": "Support complaints",
+     "points": 4,
+     "max": 15,
+     "finding": "6 reviews (0.6% of all) say support is slow or gone.",
+     "quote": "support is VERY UNRELIABLE. You write, they promise. Nothing.",
+     "quoteSource": "review",
+     "quoteUrl": "https://appsumo.com/products/adilo/reviews/stay-away-far-away-250822/"
+    }
+   ],
+   "contradictedClaims": [
+    "Includes fast SD, HD and 4K video and audio hosting ad-free with all-in-one dashboard"
+   ],
+   "costUsd": 0.028696
+  },
+  {
+   "slug": "krisp",
+   "name": "Krisp",
+   "group": "failed",
+   "eventType": "Cut features",
+   "eventDate": "2024-12-12",
+   "event": "AppSumo lifetime users shown as Free; transcripts and meeting notes moved behind the new paid product.",
+   "source": "https://appsumo.com/products/krisp/questions/screwed-us-over-1266742/",
+   "asOf": "20240913",
+   "dealUrl": "https://appsumo.com/products/krisp/",
+   "dealSnapshot": "https://web.archive.org/web/20230912142434/https://appsumo.com/products/krisp/",
+   "capturedAt": "2023-09-12",
+   "leadDays": 457,
+   "vendorUrl": "https://krisp.ai/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20230912142434/https://appsumo.com/products/krisp/",
+     "capturedAt": "2023-09-12"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://krisp.ai/",
+     "capturedAt": null
+    }
+   ],
+   "score": 21,
+   "verdict": "Unverified",
+   "verdictNote": "Not enough evidence: could not reach the vendor's own site (its terms and pricing), so the 21/100 score covers only the marketplace page and reviews. Re-run with the vendor's website to get a real verdict.",
+   "missing": [
+    "vendor terms of service",
+    "vendor pricing page"
+   ],
+   "reviewCount": 110,
+   "guard": "vendor_unreachable",
+   "topSignals": [
+    {
+     "label": "Support complaints",
+     "points": 15,
+     "max": 15,
+     "finding": "4 reviews (3.6% of all) say support is slow or gone.",
+     "quote": "their support is non existent, i have an issue with activating 4 codes",
+     "quoteSource": "review",
+     "quoteUrl": "https://appsumo.com/products/krisp/reviews/non-existent-support-stay-far-away-257307/"
+    },
+    {
+     "label": "Review trend",
+     "points": 6,
+     "max": 10,
+     "finding": "Newest 10 reviews average 4/5 vs 4.5/5 all-time (-0.5).",
+     "quote": "110 reviews, average 4.5/5",
+     "quoteSource": "stats",
+     "quoteUrl": "https://appsumo.com/products/krisp/"
+    }
+   ],
+   "contradictedClaims": [
+    "Lifetime access to Krisp's AppSumo Pro Plan",
+    "Krisp is a desktop application that removes background noise in real-time calls"
+   ],
+   "costUsd": 0.029083
+  },
+  {
+   "slug": "plerdy",
+   "name": "Plerdy",
+   "group": "control",
+   "eventType": "Still healthy",
+   "eventDate": null,
+   "event": "Product live and deal still honoured as of Oct 2026; no lifetime-revocation or limit-cut reports among its 1-2 star AppSumo reviews.",
+   "source": "https://appsumo.com/products/plerdy/reviews/",
+   "asOf": "20240801",
+   "dealUrl": "https://appsumo.com/products/plerdy/",
+   "dealSnapshot": "https://web.archive.org/web/20240614152714/https://appsumo.com/products/plerdy/",
+   "capturedAt": "2024-06-14",
+   "leadDays": null,
+   "vendorUrl": "https://www.plerdy.com/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20240614152714/https://appsumo.com/products/plerdy/",
+     "capturedAt": "2024-06-14"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20240725040335/https://www.plerdy.com/",
+     "capturedAt": "2024-07-25"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20240621080951/https://www.plerdy.com/pricing/",
+     "capturedAt": "2024-06-21"
+    },
+    {
+     "kind": "terms",
+     "url": "https://web.archive.org/web/20240716122415/https://www.plerdy.com/terms-of-service/",
+     "capturedAt": "2024-07-16"
+    }
+   ],
+   "score": 35,
+   "verdict": "Wait",
+   "verdictNote": null,
+   "missing": [],
+   "reviewCount": 246,
+   "guard": null,
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 15,
+     "max": 15,
+     "finding": "The deal says \"unlimited\", but the vendor's own pages meter usage. 2 reviews say limits were reduced.",
+     "quote": "- Stack unlimited codes",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/plerdy/"
+    },
+    {
+     "label": "Discount size",
+     "points": 10,
+     "max": 10,
+     "finding": "$69 vs a stated $2124 regular price (97% off).",
+     "quote": "$69 (was $2124)",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/plerdy/"
+    },
+    {
+     "label": "One-sided change clauses",
+     "points": 10,
+     "max": 10,
+     "finding": "The terms let the vendor change features or pricing at any time.",
+     "quote": "Plerdy may at any time temporarily or permanently suspend any demo version of the Tool with or without prior notice.",
+     "quoteSource": "terms",
+     "quoteUrl": "https://web.archive.org/web/20240716122415/https://www.plerdy.com/terms-of-service/"
+    }
+   ],
+   "contradictedClaims": [],
+   "costUsd": 0.036816
+  },
+  {
+   "slug": "simvoly",
+   "name": "Simvoly",
+   "group": "control",
+   "eventType": "Still healthy",
+   "eventDate": null,
+   "event": "Product live and deal still honoured as of Oct 2026; no lifetime-revocation or limit-cut reports among its 1-2 star AppSumo reviews.",
+   "source": "https://appsumo.com/products/simvoly/reviews/",
+   "asOf": "20240801",
+   "dealUrl": "https://appsumo.com/products/simvoly/",
+   "dealSnapshot": "https://web.archive.org/web/20220902151628/https://appsumo.com/products/simvoly/",
+   "capturedAt": "2022-09-02",
+   "leadDays": null,
+   "vendorUrl": "https://simvoly.com/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20220902151628/https://appsumo.com/products/simvoly/",
+     "capturedAt": "2022-09-02"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20240725071515/https://simvoly.com/",
+     "capturedAt": "2024-07-25"
+    },
+    {
+     "kind": "terms",
+     "url": "https://web.archive.org/web/20230811233334/https://simvoly.com/terms-and-conditions",
+     "capturedAt": "2023-08-11"
+    }
+   ],
+   "score": 31,
+   "verdict": "Wait",
+   "verdictNote": null,
+   "missing": [
+    "vendor pricing page",
+    "enough reviews (10+)"
+   ],
+   "reviewCount": 0,
+   "guard": null,
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 15,
+     "max": 15,
+     "finding": "The deal says \"unlimited\", but the vendor's own pages meter usage.",
+     "quote": "- Unlimited pages",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/simvoly/"
+    },
+    {
+     "label": "Lifetime definition",
+     "points": 10,
+     "max": 20,
+     "finding": "The vendor may discontinue the product, which ends a lifetime deal.",
+     "quote": "We reserve the right to change, suspend or discontinue, or terminate, restrict or disable your use of or access to, parts or all of the Services or their functionality at any time at our sole discretion and without notice.",
+     "quoteSource": "terms",
+     "quoteUrl": "https://web.archive.org/web/20230811233334/https://simvoly.com/terms-and-conditions"
+    },
+    {
+     "label": "One-sided change clauses",
+     "points": 6,
+     "max": 10,
+     "finding": "The terms let the vendor change the service.",
+     "quote": "We have the right to change parts or all of the services and functionalities at any given time, to remove or suspend parts or all of the services and functionalities",
+     "quoteSource": "terms",
+     "quoteUrl": "https://web.archive.org/web/20230811233334/https://simvoly.com/terms-and-conditions"
+    }
+   ],
+   "contradictedClaims": [
+    "Lifetime access to the Simvoly E-Commerce Plan for $49",
+    "Try it out for 2 months money-back guarantee"
+   ],
+   "costUsd": 0.028042
+  },
+  {
+   "slug": "keywords",
+   "name": "Keywords.am",
+   "group": "control",
+   "eventType": "Still healthy",
+   "eventDate": null,
+   "event": "Product live and deal still honoured as of Oct 2026; no lifetime-revocation or limit-cut reports among its 1-2 star AppSumo reviews.",
+   "source": "https://appsumo.com/products/keywords/reviews/",
+   "asOf": "20240801",
+   "dealUrl": "https://appsumo.com/products/keywords/",
+   "dealSnapshot": "https://web.archive.org/web/20240722022947/https://appsumo.com/products/keywords/",
+   "capturedAt": "2024-07-22",
+   "leadDays": null,
+   "vendorUrl": null,
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20240722022947/https://appsumo.com/products/keywords/",
+     "capturedAt": "2024-07-22"
+    }
+   ],
+   "score": 20,
+   "verdict": "Unverified",
+   "verdictNote": "Not enough evidence: could not reach the vendor's own site (its terms and pricing), so the 20/100 score covers only the marketplace page and reviews. Re-run with the vendor's website to get a real verdict.",
+   "missing": [
+    "vendor terms of service",
+    "vendor pricing page"
+   ],
+   "reviewCount": 110,
+   "guard": "vendor_unreachable",
+   "topSignals": [
+    {
+     "label": "Lifetime definition",
+     "points": 10,
+     "max": 20,
+     "finding": "2 low-star reviews say lifetime access was cut back or moved behind a subscription.",
+     "quote": "It says keyword research is only available by invitation only.",
+     "quoteSource": "review",
+     "quoteUrl": "https://appsumo.com/products/keywords/reviews/i-almost-bought-it-again-214785/"
+    },
+    {
+     "label": "Discount size",
+     "points": 10,
+     "max": 10,
+     "finding": "$59 vs a stated $1500 regular price (96% off).",
+     "quote": "$59 (was $1500)",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/keywords/"
+    }
+   ],
+   "contradictedClaims": [
+    "Access to Keywords Advantage swiss army knife tool"
+   ],
+   "costUsd": 0.0212
+  },
+  {
+   "slug": "missinglettr",
+   "name": "Missinglettr",
+   "group": "control",
+   "eventType": "Still healthy",
+   "eventDate": null,
+   "event": "Product live and deal still honoured as of Oct 2026; no lifetime-revocation or limit-cut reports among its 1-2 star AppSumo reviews.",
+   "source": "https://appsumo.com/products/missinglettr/reviews/",
+   "asOf": "20240801",
+   "dealUrl": "https://appsumo.com/products/missinglettr/",
+   "dealSnapshot": "https://web.archive.org/web/20230730054935/https://appsumo.com/products/missinglettr",
+   "capturedAt": "2023-07-30",
+   "leadDays": null,
+   "vendorUrl": "https://missinglettr.com/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20230730054935/https://appsumo.com/products/missinglettr",
+     "capturedAt": "2023-07-30"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20240721081204/https://missinglettr.com/",
+     "capturedAt": "2024-07-21"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20240625144601/https://missinglettr.com/pricing/",
+     "capturedAt": "2024-06-25"
+    },
+    {
+     "kind": "terms",
+     "url": "https://web.archive.org/web/20240714165335/https://missinglettr.com/legal/terms/",
+     "capturedAt": "2024-07-14"
+    }
+   ],
+   "score": 40,
+   "verdict": "Wait",
+   "verdictNote": null,
+   "missing": [
+    "enough reviews (10+)"
+   ],
+   "reviewCount": 0,
+   "guard": null,
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 15,
+     "max": 15,
+     "finding": "The deal says \"unlimited\", but the vendor's own pages meter usage.",
+     "quote": "Unlimited extra users",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/missinglettr"
+    },
+    {
+     "label": "Lifetime definition",
+     "points": 10,
+     "max": 20,
+     "finding": "The vendor may discontinue the product, which ends a lifetime deal.",
+     "quote": "all licences granted under these terms shall immediately terminate and the Customer shall immediately cease all use of the Services, Software and/or the Documentation;",
+     "quoteSource": "terms",
+     "quoteUrl": "https://web.archive.org/web/20240714165335/https://missinglettr.com/legal/terms/"
+    },
+    {
+     "label": "One-sided change clauses",
+     "points": 10,
+     "max": 10,
+     "finding": "The terms let the vendor change features or pricing at any time.",
+     "quote": "as such document may be amended by the Supplier in its sole discretion from time to time.",
+     "quoteSource": "terms",
+     "quoteUrl": "https://web.archive.org/web/20240714165335/https://missinglettr.com/legal/terms/"
+    }
+   ],
+   "contradictedClaims": [
+    "60 day money-back guarantee, try for 2 months"
+   ],
+   "costUsd": 0.025019
+  },
+  {
+   "slug": "neuronwriter",
+   "name": "NeuronWriter",
+   "group": "control",
+   "eventType": "Still healthy",
+   "eventDate": null,
+   "event": "Product live and deal still honoured as of Oct 2026; no lifetime-revocation or limit-cut reports among its 1-2 star AppSumo reviews.",
+   "source": "https://appsumo.com/products/neuronwriter/reviews/",
+   "asOf": "20240801",
+   "dealUrl": "https://appsumo.com/products/neuronwriter/",
+   "dealSnapshot": "https://web.archive.org/web/20240629225731/https://appsumo.com/products/neuronwriter/",
+   "capturedAt": "2024-06-29",
+   "leadDays": null,
+   "vendorUrl": "https://neuronwriter.com/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20240629225731/https://appsumo.com/products/neuronwriter/",
+     "capturedAt": "2024-06-29"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20240730080900/https://neuronwriter.com/",
+     "capturedAt": "2024-07-30"
+    },
+    {
+     "kind": "vendor_pricing",
+     "url": "https://web.archive.org/web/20240722085724/https://neuronwriter.com/pricing/",
+     "capturedAt": "2024-07-22"
+    }
+   ],
+   "score": 14,
+   "verdict": "Wait",
+   "verdictNote": "Score is low, but the vendor terms of service could not be read, so the low score is not proof of safety.",
+   "missing": [
+    "vendor terms of service"
+   ],
+   "reviewCount": 743,
+   "guard": "terms_unreadable",
+   "topSignals": [
+    {
+     "label": "Hidden caps",
+     "points": 5,
+     "max": 15,
+     "finding": "Usage is metered (credits or quotas) on the vendor's pages.",
+     "quote": "* \u2013 One (1) A.I. credit gives between 0.3 and 5 words, depending on the engine used.",
+     "quoteSource": "vendor_pricing",
+     "quoteUrl": "https://web.archive.org/web/20240722085724/https://neuronwriter.com/pricing/"
+    },
+    {
+     "label": "Discount size",
+     "points": 5,
+     "max": 10,
+     "finding": "$89 vs a stated $750 regular price (88% off).",
+     "quote": "$89 (was $750)",
+     "quoteSource": "deal",
+     "quoteUrl": "https://appsumo.com/products/neuronwriter/"
+    },
+    {
+     "label": "Support complaints",
+     "points": 4,
+     "max": 15,
+     "finding": "2 reviews (0.3% of all) say support is slow or gone.",
+     "quote": "I wrote in the chat asking to look at it but never got a reply back.",
+     "quoteSource": "review",
+     "quoteUrl": "https://appsumo.com/products/neuronwriter-v2-0/reviews/not-accurate-213476/"
+    }
+   ],
+   "contradictedClaims": [
+    "Provides AI-powered research and writing tools to plan high-ranking content",
+    "Helps research niche articles quickly to get content ideas and competitive edge"
+   ],
+   "costUsd": 0.048725
+  },
+  {
+   "slug": "wp-reset",
+   "name": "WP Reset",
+   "group": "control",
+   "eventType": "Still healthy",
+   "eventDate": null,
+   "event": "Product live and deal still honoured as of Oct 2026; no lifetime-revocation or limit-cut reports among its 1-2 star AppSumo reviews.",
+   "source": "https://appsumo.com/products/wp-reset/reviews/",
+   "asOf": "20240801",
+   "dealUrl": "https://appsumo.com/products/wp-reset/",
+   "dealSnapshot": "https://web.archive.org/web/20240729040430/https://appsumo.com/products/wp-reset/",
+   "capturedAt": "2024-07-29",
+   "leadDays": null,
+   "vendorUrl": "https://wpreset.com/",
+   "sources": [
+    {
+     "kind": "deal",
+     "url": "https://web.archive.org/web/20240729040430/https://appsumo.com/products/wp-reset/",
+     "capturedAt": "2024-07-29"
+    },
+    {
+     "kind": "vendor_home",
+     "url": "https://web.archive.org/web/20240731031037/https://wpreset.com/",
+     "capturedAt": "2024-07-31"
+    },
+    {
+     "kind": "terms",
+     "url": "https://web.archive.org/web/20240720104112/https://wpreset.com/terms/",
+     "capturedAt": "2024-07-20"
+    }
+   ],
+   "score": 25,
+   "verdict": "Buy",
+   "verdictNote": null,
+   "missing": [
+    "vendor pricing page"
+   ],
+   "reviewCount": 1304,
+   "guard": null,
+   "topSignals": [
+    {
+     "label": "Review trend",
+     "points": 10,
+     "max": 10,
+     "finding": "Newest 12 reviews average 3.75/5 vs 4.93/5 all-time (-1.18).",
+     "quote": "1304 reviews, average 4.93/5",
+     "quoteSource": "stats",
+     "quoteUrl": "https://appsumo.com/products/wp-reset/"
+    },
+    {
+     "label": "One-sided change clauses",
+     "points": 6,
+     "max": 10,
+     "finding": "The terms let the vendor change the service.",
+     "quote": "If you buy for $10 today and see a deal for $5 tomorrow, we won\u2019t refund you $5 nor upgrade your account to match the new limits.",
+     "quoteSource": "terms",
+     "quoteUrl": "https://web.archive.org/web/20240720104112/https://wpreset.com/terms/"
+    },
+    {
+     "label": "Hidden caps",
+     "points": 5,
+     "max": 15,
+     "finding": "Usage is metered (credits or quotas) on the vendor's pages.",
+     "quote": "All Snapshots not used (downloaded or edited) in over 180 days are automatically deleted.",
+     "quoteSource": "terms",
+     "quoteUrl": "https://web.archive.org/web/20240720104112/https://wpreset.com/terms/"
+    }
+   ],
+   "contradictedClaims": [
+    "Previous customers can upgrade license to increase feature limits",
+    "Plugin collectively installs themes and plugins, resets defaults, and takes snapshots"
+   ],
+   "costUsd": 0.047827
+  },
+  {
+   "slug": "meetgeek",
+   "name": "MeetGeek",
+   "group": "control",
+   "eventType": "Still healthy",
+   "eventDate": null,
+   "event": "Product live and deal still honoured as of Oct 2026; no lifetime-revocation or limit-cut reports among its 1-2 star AppSumo reviews.",
+   "source": "https://appsumo.com/products/meetgeek/reviews/",
+   "asOf": "20240801",
+   "dealUrl": "https://appsumo.com/products/meetgeek/",
+   "error": "Wayback CDX index unavailable (rate-limited or down); retry later"
+  },
+  {
+   "slug": "brizy",
+   "name": "Brizy",
+   "group": "control",
+   "eventType": "Still healthy",
+   "eventDate": null,
+   "event": "Product live and deal still honoured as of Oct 2026; no lifetime-revocation or limit-cut reports among its 1-2 star AppSumo reviews.",
+   "source": "https://appsumo.com/products/brizy/reviews/",
+   "asOf": "20240801",
+   "dealUrl": "https://appsumo.com/products/brizy/",
+   "error": "Wayback CDX index unavailable (rate-limited or down); retry later"
+  }
+ ]
+}

@@ -32,8 +32,9 @@ type Case = {
   capturedAt?: string | null;
   leadDays?: number | null;
   score?: number;
-  verdict?: "Buy" | "Wait" | "Skip";
+  verdict?: "Buy" | "Wait" | "Skip" | "Unverified";
   verdictNote?: string | null;
+  guard?: "terms_unreadable" | "no_reviews" | "vendor_unreachable" | null;
   missing?: string[];
   topSignals?: Signal[];
   error?: string;
@@ -45,7 +46,8 @@ type Summary = {
   Buy: number;
   Wait: number;
   Skip: number;
-  waitByCoverageGuard: number;
+  Unverified: number;
+  guards: { terms_unreadable: number; no_reviews: number; vendor_unreachable: number };
   flaggedOnScore: number;
   meanScore: number | null;
 };
@@ -57,7 +59,12 @@ const results = data as unknown as {
   cases: Case[];
 };
 
-const VERDICT_COLOR = { Buy: "text-buy", Wait: "text-wait", Skip: "text-skip" } as const;
+const VERDICT_COLOR = { Buy: "text-buy", Wait: "text-wait", Skip: "text-skip", Unverified: "text-muted" } as const;
+const GUARD_LABEL = {
+  terms_unreadable: "Coverage guard (terms unreadable)",
+  no_reviews: "No-reviews rule",
+  vendor_unreachable: "Unverified (vendor site unreadable)",
+} as const;
 
 const fmtAsOf = (s: string) => `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
 const months = (days?: number | null) => (days == null ? null : Math.round(days / 30.4));
@@ -139,7 +146,11 @@ function CaseRow({ c }: { c: Case }) {
         ) : (
           <p className="mt-2 text-sm text-muted">No risk signal fired on the archived evidence.</p>
         )}
-        {c.verdictNote && <p className="mt-2 text-xs text-muted">Coverage guard: {c.verdictNote}</p>}
+        {c.verdictNote && (
+          <p className="mt-2 text-xs text-muted">
+            {c.guard ? GUARD_LABEL[c.guard] : "Note"}: {c.verdictNote}
+          </p>
+        )}
       </div>
 
       <div className="sm:text-right">
@@ -189,25 +200,75 @@ export default function BacktestPage() {
         </h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <Stat
-            big={`${f.Wait + f.Skip}/${f.n}`}
-            label="Failed deals not rated Buy"
-            sub={`${f.Skip} Skip, ${f.Wait} Wait, ${f.Buy} Buy. ${f.waitByCoverageGuard} of the Waits came only from the coverage guard (terms unreadable), not from the score.`}
+            big={`${f.flaggedOnScore}/${f.n}`}
+            label="Failed deals flagged on score"
+            sub={`Risk score above 30, i.e. Wait or Skip on the evidence itself (${pct(f.flaggedOnScore, f.n)}). Mean score ${f.meanScore ?? "–"}.`}
           />
           <Stat
-            big={`${f.flaggedOnScore}/${f.n}`}
-            label="Failed deals flagged on score alone"
-            sub={`Risk score above 30 (${pct(f.flaggedOnScore, f.n)}). Mean score ${f.meanScore ?? "–"}.`}
+            big={`${f.n - f.Buy}/${f.n}`}
+            label="Failed deals not rated Buy"
+            sub={`${f.Skip} Skip, ${f.Wait} Wait, ${f.Unverified} Unverified, ${f.Buy} Buy. Includes verdicts set by an evidence guard rather than the score (see below).`}
           />
           <Stat
             big={`${k.Buy}/${k.n}`}
             label="Healthy controls rated Buy"
-            sub={`${k.Wait} Wait, ${k.Skip} Skip. Controls scoring above 30: ${k.flaggedOnScore}. Mean score ${k.meanScore ?? "–"}.`}
+            sub={`${k.Wait} Wait, ${k.Skip} Skip, ${k.Unverified} Unverified. Controls scoring above 30: ${k.flaggedOnScore}. Mean score ${k.meanScore ?? "–"}.`}
           />
         </div>
+        <div className="mt-4 overflow-x-auto rounded-lg border border-rule bg-white">
+          <table className="w-full text-left text-sm">
+            <thead className="font-mono text-[11px] uppercase tracking-wide text-muted">
+              <tr className="border-b border-rule">
+                <th className="px-4 py-2 font-normal">Group</th>
+                <th className="px-3 py-2 font-normal">Buy</th>
+                <th className="px-3 py-2 font-normal">Wait</th>
+                <th className="px-3 py-2 font-normal">Skip</th>
+                <th className="px-3 py-2 font-normal">Unverified</th>
+                <th className="px-3 py-2 font-normal">Score &gt; 30</th>
+                <th className="px-3 py-2 font-normal">Set by a guard*</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(
+                [
+                  ["Later failed", f],
+                  ["Stayed healthy", k],
+                ] as const
+              ).map(([name, s]) => (
+                <tr key={name} className="border-b border-rule last:border-0">
+                  <td className="px-4 py-2 font-semibold">
+                    {name} <span className="font-normal text-muted">(n={s.n})</span>
+                  </td>
+                  <td className="px-3 py-2 text-buy">{s.Buy}</td>
+                  <td className="px-3 py-2 text-wait">{s.Wait}</td>
+                  <td className="px-3 py-2 text-skip">{s.Skip}</td>
+                  <td className="px-3 py-2 text-muted">{s.Unverified}</td>
+                  <td className="px-3 py-2">{s.flaggedOnScore}</td>
+                  <td className="px-3 py-2 text-muted">
+                    {s.guards.terms_unreadable} terms · {s.guards.no_reviews} no reviews · {s.guards.vendor_unreachable} vendor
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-4 rounded-lg border border-rule bg-white p-4 text-[15px]">
+          <b>Reading it honestly:</b> on score alone, {f.flaggedOnScore} of {f.n} failed deals ({pct(f.flaggedOnScore, f.n)}) and {k.flaggedOnScore} of {k.n} healthy controls ({pct(k.flaggedOnScore, k.n)}) scored
+          above 30. {f.flaggedOnScore / Math.max(f.n, 1) > k.flaggedOnScore / Math.max(k.n, 1) + 0.15
+            ? "Failed deals were flagged more often than controls, but the sample is small."
+            : "At this sample size the score does not separate deals that later failed from deals that stayed healthy."}{" "}
+          The engine is cautious: it rarely says Buy for either group ({f.Buy} of {f.n} failed, {k.Buy} of {k.n} controls),
+          so a Wait is common and a Buy is the stronger statement. The {f.Buy} failed deal{f.Buy === 1 ? "" : "s"} rated Buy
+          {f.Buy === 1 ? " is" : " are"} the miss to study.
+        </p>
+        <p className="mt-2 text-xs text-muted">
+          * A low score (0-30) is not shown as Buy when evidence is missing: unreadable terms turn it into Wait, zero
+          reviews turn it into Wait, and an unreadable vendor site turns any non-Skip verdict into Unverified. These are
+          production rules; the table shows how many verdicts they set.
+        </p>
         <p className="mt-3 text-xs text-muted">
           {f.errors + k.errors > 0 && <>{f.errors + k.errors} case(s) could not be scored and are excluded from the counts. </>}
-          Thresholds are the production ones (0-30 Buy, 31-60 Wait, 61+ Skip) and were not changed for this test. Model
-          spend for all runs: ${results.modelSpendUsd.toFixed(2)}.
+          Thresholds are the production ones (0-30 Buy, 31-60 Wait, 61+ Skip) and were not changed for this test. Model spend for the runs shown: ${results.modelSpendUsd.toFixed(2)}.
         </p>
       </section>
 
@@ -277,8 +338,8 @@ export default function BacktestPage() {
           </li>
           <li>
             Wayback coverage is uneven. Captures can be months older than the as-of date, vendor terms pages were often
-            never archived (the coverage guard then turns a low score into Wait), and very old AppSumo pages predate the
-            layout we parse.
+            never archived (a guard then replaces a low-score Buy), and AppSumo pages captured before its current layout
+            are read as plain text, without plans or reviews.
           </li>
           <li>
             The models may know a product&apos;s later fate from training. They cannot add points with that knowledge:
@@ -288,6 +349,10 @@ export default function BacktestPage() {
           <li>
             Reviews deleted before today, and edits that AppSumo does not flag, are invisible to us. Model output varies
             slightly run to run, so borderline scores can move a few points.
+          </li>
+          <li>
+            The Internet Archive stopped answering our index queries partway through the run (rate limiting), so a few
+            cases could not be scored; they are listed as &quot;not scored&quot; rather than dropped.
           </li>
           <li>A Wait or Skip is a warning, not a prediction of the exact failure. Some flags fired for reasons unrelated to what later happened.</li>
         </ul>
