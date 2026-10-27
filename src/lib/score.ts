@@ -14,6 +14,7 @@ export interface Evidence {
 
 export interface SignalScore {
   key: string;
+  checked: boolean; // false when the evidence this signal needs could not be read
   label: string;
   max: number;
   points: number;
@@ -23,9 +24,19 @@ export interface SignalScore {
 
 export type Verdict = "Buy" | "Wait" | "Skip";
 
+export interface Coverage {
+  terms: boolean;
+  refund: boolean;
+  pricing: boolean;
+  reviews: number;
+  missing: string[];
+}
+
 export interface RiskReport {
   score: number;
   verdict: Verdict;
+  verdictNote: string | null;
+  coverage: Coverage;
   signals: SignalScore[];
 }
 
@@ -44,7 +55,24 @@ const BUYER_LIFETIME = /lifetime of (the )?(user|buyer|customer|account holder|p
 const DISCONTINUE = /discontinu|cease|shut ?down|terminate (the )?(service|product)|end of life|sunset/i;
 const NO_NOTICE = /without (prior )?notice|at any time|sole discretion/i;
 
-export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, trace: VendorTrace | null): RiskReport {
+export function scoreRisk(
+  deal: DealInfo,
+  ex: Extraction,
+  rev: ReviewAnalysis,
+  trace: VendorTrace | null,
+  docKinds: string[],
+  dealText = "",
+): RiskReport {
+  const coverage: Coverage = {
+    terms: docKinds.includes("terms"),
+    refund: docKinds.includes("refund"),
+    pricing: docKinds.includes("vendor_pricing"),
+    reviews: rev.stats?.count ?? 0,
+    missing: [],
+  };
+  if (!coverage.terms) coverage.missing.push("vendor terms of service");
+  if (!coverage.pricing) coverage.missing.push("vendor pricing page");
+  if (coverage.reviews < 10) coverage.missing.push("enough reviews (10+)");
   const by = (s: FinePrint["signal"]) => ex.finePrint.filter((f) => f.signal === s);
   const signals: SignalScore[] = [];
 
@@ -64,7 +92,7 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
       points = 20;
       finding = `${revokedN} low-star reviews (${pct(share(rev, revokedN))} of all) say lifetime access was cut back or moved behind a subscription.`;
       evidence = rv(revoked);
-    } else if (revokedN >= 2) {
+    } else if (revokedN >= 2 && share(rev, revokedN) >= 0.01) {
       points = 10;
       finding = `${revokedN} low-star reviews say lifetime access was cut back or moved behind a subscription.`;
       evidence = rv(revoked);
@@ -80,12 +108,16 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
       finding = "\"Lifetime\" is tied to the buyer, not the product.";
       evidence = [fp(buyerLife)];
     }
-    signals.push({ key: "lifetime", label: "Lifetime definition", max: 20, points, finding, evidence });
+    signals.push({ key: "lifetime", checked: coverage.terms || points > 0, label: "Lifetime definition", max: 20, points, finding, evidence });
   }
 
   // 2. Hidden caps (15): "unlimited" promised, but caps/credits in fine print or shrinking limits in reviews
   {
-    const unlimited = ex.claims.filter((c) => c.category === "unlimited" || /unlimited/i.test(c.quote.text));
+    // Read "unlimited" straight off the deal page (deterministic), falling back to extracted claims.
+    const fromPage = unlimitedSentence(dealText);
+    const unlimited = fromPage
+      ? [{ quote: { text: fromPage, url: deal.url } }]
+      : ex.claims.filter((c) => c.category === "unlimited" || /unlimited/i.test(c.quote.text));
     const caps = by("usage_cap");
     const shrunk = theme(rev, "limits_shrunk");
     let points = 0;
@@ -106,7 +138,7 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
       finding = points > 8 ? `${finding} ${r}` : r;
       evidence.push(...rv(shrunk, 2));
     }
-    signals.push({ key: "caps", label: "Hidden caps", max: 15, points, finding: finding.trim(), evidence });
+    signals.push({ key: "caps", checked: coverage.terms || coverage.pricing || points > 0, label: "Hidden caps", max: 15, points, finding: finding.trim(), evidence });
   }
 
   // 3. Support complaints (15)
@@ -117,6 +149,7 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
     const points = n === 0 ? 0 : sh >= 0.03 ? 15 : sh >= 0.015 ? 8 : 4;
     signals.push({
       key: "support",
+      checked: coverage.reviews >= 10,
       label: "Support complaints",
       max: 15,
       points,
@@ -135,6 +168,7 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
       rev.trend.note + (low >= 0.1 ? ` ${Math.round(low * 100)}% of all reviews are 1-2 stars.` : "");
     signals.push({
       key: "trend",
+      checked: rev.trend.delta != null,
       label: "Review trend",
       max: 10,
       points,
@@ -167,7 +201,7 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
       if (points)
         finding = `The $${plans[0].price} tier lacks ${missing.length} of ${t2.length} features in the $${plans[1].price} tier${zero ? " and includes a zero allowance" : ""}.`;
     }
-    signals.push({ key: "tiers", label: "Tier trap", max: 10, points, finding, evidence });
+    signals.push({ key: "tiers", checked: true, label: "Tier trap", max: 10, points, finding, evidence });
   }
 
   // 6. Vendor age & track record (10)
@@ -190,7 +224,7 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
       points = Math.min(10, points + 3);
       finding += ` Sold on AppSumo ${repeats} times before.`;
     } else if (repeats === 1) finding += " Sold on AppSumo once before.";
-    signals.push({ key: "vendor", label: "Vendor age & track record", max: 10, points, finding, evidence });
+    signals.push({ key: "vendor", checked: !!trace && (!!trace.registered || !!trace.firstSnapshot), label: "Vendor age & track record", max: 10, points, finding, evidence });
   }
 
   // 7. Unreasonable discount (10): entry tier price vs the stated regular price
@@ -207,7 +241,7 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
       finding = `$${price} vs a stated $${orig} regular price (${Math.round(off * 100)}% off).`;
       evidence.push({ source: "deal", quote: `$${price} (was $${orig})`, url: deal.url });
     }
-    signals.push({ key: "discount", label: "Discount size", max: 10, points, finding, evidence });
+    signals.push({ key: "discount", checked: evidence.length > 0, label: "Discount size", max: 10, points, finding, evidence });
   }
 
   // 8. Unilateral change clauses (10)
@@ -217,6 +251,7 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
     const points = strong ? 10 : u.length ? 6 : 0;
     signals.push({
       key: "unilateral",
+      checked: coverage.terms || points > 0,
       label: "One-sided change clauses",
       max: 10,
       points,
@@ -229,7 +264,28 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
     });
   }
 
+  for (const sig of signals)
+    if (!sig.checked && sig.points === 0) sig.finding = `Not checked: ${notCheckedReason(sig.key, coverage)}.`;
+
   const score = signals.reduce((a, s) => a + s.points, 0);
-  const verdict: Verdict = score <= 30 ? "Buy" : score <= 60 ? "Wait" : "Skip";
-  return { score, verdict, signals };
+  let verdict: Verdict = score <= 30 ? "Buy" : score <= 60 ? "Wait" : "Skip";
+  let verdictNote: string | null = null;
+  // Missing evidence is not the same as low risk: never say Buy when the fine print was unreadable.
+  if (verdict === "Buy" && !coverage.terms) {
+    verdict = "Wait";
+    verdictNote = `Score is low, but the ${coverage.missing.join(", ")} could not be read, so the low score is not proof of safety.`;
+  }
+  return { score, verdict, verdictNote, coverage, signals };
+}
+
+function unlimitedSentence(text: string): string | null {
+  const m = text.match(/[^.\n]{0,120}\bunlimited\b[^.\n]{0,120}/i);
+  return m ? m[0].trim() : null;
+}
+
+function notCheckedReason(key: string, c: Coverage): string {
+  if (key === "lifetime" || key === "unilateral" || key === "caps") return "the vendor's terms could not be read";
+  if (key === "support" || key === "trend") return c.reviews ? "too few recent reviews" : "no reviews found";
+  if (key === "vendor") return "domain records were unavailable";
+  return "no data";
 }

@@ -38,6 +38,9 @@ export async function callModel(role: Role, messages: ChatCompletionMessageParam
     model,
     messages,
     max_tokens: opts.maxTokens ?? 4000,
+    // Same evidence should give the same verdict: keep sampling as deterministic as the API allows.
+    temperature: 0,
+    seed: 7,
     ...(opts.reasoningEffort ? { reasoning_effort: opts.reasoningEffort } : {}),
     ...(opts.json ? { response_format: { type: "json_object" as const } } : {}),
   } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming);
