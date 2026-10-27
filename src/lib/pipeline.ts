@@ -97,7 +97,7 @@ async function runPipeline(url: string, opts: Opts) {
     courtroom: court,
     reviews,
     trace,
-    sources: bundle.docs.map((x) => ({ kind: x.kind, url: x.url, title: x.title, chars: x.chars, ...(x.capturedAt ? { capturedAt: x.capturedAt } : {}) })),
+    sources: bundle.docs.map((x) => ({ kind: x.kind, url: x.url, title: x.title, chars: x.chars, ...(x.capturedAt ? { capturedAt: x.capturedAt } : {}), ...(x.via ? { via: x.via } : {}) })),
     warnings: [...bundle.warnings, ...(trace?.errors ?? [])],
     dropped: extraction.dropped,
     costUsd: Math.round((extraction.costUsd + reviews.costUsd + court.costUsd) * 1e6) / 1e6,

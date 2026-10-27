@@ -12,7 +12,9 @@ export interface SourceDoc {
   chars: number; // length before capping
   fetchedAt: string; // ISO
   error?: string;
-  capturedAt?: string; // as-of mode: YYYY-MM-DD of the Wayback capture this text came from
+  capturedAt?: string; // YYYY-MM-DD of the Wayback capture this text came from (as-of mode, or via "wayback")
+  // Live-mode fallback that produced the text: "reader" = r.jina.ai rendering, "wayback" = latest capture.
+  via?: "reader" | "wayback";
 }
 
 export interface DealPlan {

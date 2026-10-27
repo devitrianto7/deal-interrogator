@@ -322,6 +322,11 @@ export function ReportView({ report, onRerun }: { report: Report; onRerun: () =>
               <a href={s.url} target="_blank" rel="noreferrer" className="min-w-0 truncate underline">
                 {s.url}
               </a>
+              {"via" in s && s.via && (
+                <span className="shrink-0 font-mono text-[11px] text-muted">
+                  {s.via === "reader" ? "via reader" : `archived ${"capturedAt" in s ? s.capturedAt : ""}`}
+                </span>
+              )}
             </li>
           ))}
           {trace?.registered && (

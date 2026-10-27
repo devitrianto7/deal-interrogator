@@ -23,8 +23,19 @@ export function htmlToText(html: string): { title: string; text: string } {
   return { title, text };
 }
 
+// Lone UTF-16 surrogates (from a string cut mid-pair) break strict JSON parsers downstream.
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+export const wellFormed = (s: string) => s.replace(LONE_SURROGATE, "\uFFFD");
+
+/** Cuts at most `max` UTF-16 units without splitting a surrogate pair. */
+export function safeSlice(s: string, max: number): string {
+  if (s.length <= max) return s;
+  const c = s.charCodeAt(max - 1);
+  return s.slice(0, c >= 0xd800 && c <= 0xdbff ? max - 1 : max);
+}
+
 export function normalize(s: string): string {
-  return s
+  return wellFormed(s)
     .replace(/\u00a0/g, " ")
     .replace(/[ \t\f\v]+/g, " ")
     .replace(/ *\n */g, "\n")
@@ -33,7 +44,7 @@ export function normalize(s: string): string {
 }
 
 export function cap(text: string, max = MAX_DOC_CHARS): string {
-  return text.length > max ? text.slice(0, max) + "\n[...truncated]" : text;
+  return text.length > max ? safeSlice(text, max) + "\n[...truncated]" : text;
 }
 
 export interface FoundLink {

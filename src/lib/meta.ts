@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { costUsd } from "./pricing";
 import { assertBudget, recordSpend } from "./budget";
+import { wellFormed } from "./fetcher/extract";
 
 export type Role = "judge" | "prosecutor" | "defender" | "extractor";
 
@@ -37,7 +38,8 @@ export async function callModel(role: Role, messages: ChatCompletionMessageParam
   const model = MODEL_FOR[role];
   const res = await getClient().chat.completions.create({
     model,
-    messages,
+    // A lone surrogate (text cut mid-emoji) makes the API reject the whole request as invalid JSON.
+    messages: messages.map((m) => (typeof m.content === "string" ? { ...m, content: wellFormed(m.content) } : m)),
     max_tokens: opts.maxTokens ?? 4000,
     // Same evidence should give the same verdict: keep sampling as deterministic as the API allows.
     temperature: 0,

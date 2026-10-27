@@ -3,7 +3,8 @@
 // then pull critical reviews (1-3 stars) from AppSumo's public reviews API.
 import * as cheerio from "cheerio";
 import { safeFetch } from "./http";
-import { stripHtml } from "./extract";
+import { extractLinks, stripHtml, type FoundLink } from "./extract";
+import { rankVendorLinks } from "./marketplace";
 import type { DealInfo, DealPlan, DealReview } from "./types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -73,6 +74,23 @@ async function fetchReviewsBefore(dealId: number, cutoffMs: number, rating?: num
     out.push(...list.filter((c) => writtenBefore(c, cutoffMs)));
   }
   return out.slice(0, want);
+}
+
+// Many deals leave product_url empty but link the product in the story snippet, the overview,
+// or a founder update. Collect every link in the deal JSON and keep only hosts that match the
+// product's name or slug (rankVendorLinks drops social, payment, help-desk and marketplace hosts).
+function vendorFromStory(d: any, url: string, name: string): string | null {
+  const links: FoundLink[] = [];
+  const story = d.products?.[0]?.story ?? {};
+  const html = [story.snippet, story.html_body, story.value_prop, story.tldr_overview, d.clickthrough_url]
+    .concat(((d.founders?.posts ?? []) as any[]).map((p) => p?.message))
+    .concat(((d.faqs ?? []) as any[]).map((f) => f?.answer))
+    .filter((x): x is string => typeof x === "string" && x.length > 0)
+    .join("\n");
+  if (html) links.push(...extractLinks(`<div>${html}</div>`, url));
+  // Bare URLs anywhere else in the deal record.
+  for (const m of JSON.stringify(d).matchAll(/https?:\/\/[^\s"'<>()\\]+/g)) links.push({ href: m[0], text: "" });
+  return rankVendorLinks(links, url, name)[0] ?? null;
 }
 
 export interface AppSumoParse {
@@ -157,7 +175,7 @@ export async function parseAppSumo(url: string, html: string, opts: { asOf?: str
     url,
     name: String(d.public_name ?? story.header ?? ""),
     tagline: String(story.subheader ?? story.value_prop ?? ""),
-    vendorUrl: d.product_url || null,
+    vendorUrl: d.product_url || vendorFromStory(d, url, String(d.public_name ?? story.header ?? "")),
     price: num(d.price),
     originalPrice: num(d.original_price),
     refundableDays: num(d.refundable_days),

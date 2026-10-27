@@ -4,7 +4,7 @@
 // the product), and read the marketplace's own deal terms with simple regexes.
 // Never fall back to the marketplace's own homepage/terms as if they were the vendor's.
 import * as cheerio from "cheerio";
-import { safeFetch } from "./http";
+import { safeFetch, type FetchResult } from "./http";
 import { htmlToText, type FoundLink } from "./extract";
 import type { DealInfo, DocKind } from "./types";
 
@@ -69,6 +69,19 @@ export function siteOf(host: string): string {
   if (hosted) return parts.slice(-(hosted.split(".").length + 1)).join(".");
   const twoPart = /^(co|com|net|org|gov|ac|edu)\.[a-z]{2}$/.test(parts.slice(-2).join("."));
   return parts.slice(twoPart ? -3 : -2).join(".");
+}
+
+// Subdomains that are the vendor's own marketing or app hosts. Any other subdomain may be a
+// customer site on a hosting platform (creator.teachery.co is not Teachery).
+const OWN_SUBDOMAIN = /^(www\d?|info|get|go|try|landing|lp|pages?|home|start|join|app|my|local|en|us|web|site|hello|offer|promo)$/i;
+
+/** The part of the web that speaks for a vendor host: its registrable site, unless the host is a non-marketing subdomain. */
+export function scopeOf(host: string): string {
+  const h = host.toLowerCase().replace(/^www\./, "");
+  const site = siteOf(h);
+  if (h === site) return site;
+  const sub = h.slice(0, -(site.length + 1));
+  return !sub.includes(".") && OWN_SUBDOMAIN.test(sub) ? site : h;
 }
 
 export function isMarketplaceUrl(url: string): boolean {
@@ -141,7 +154,11 @@ export function rankVendorLinks(links: FoundLink[], dealUrl: string, name: strin
 const PARKED = /for sale|domain (is )?(available|parked)|buy this domain|parked|godaddy|namecheap|sedo|dan\.com|hugedomains/i;
 
 /** Last resort: try <name>.com/.io/.ai/.app and accept one only if its homepage title names the product. */
-export async function guessVendorDomain(name: string, dealUrl: string): Promise<string | null> {
+export async function guessVendorDomain(
+  name: string,
+  dealUrl: string,
+  fetcher: (url: string) => Promise<FetchResult> = (u) => safeFetch(u),
+): Promise<string | null> {
   const bases = [...new Set([key(name), key(slugOf(dealUrl))])].filter((b) => b.length >= 4 && b.length <= 30);
   const n = key(name);
   if (!bases.length || n.length < 3) return null;
@@ -149,7 +166,7 @@ export async function guessVendorDomain(name: string, dealUrl: string): Promise<
   const results = await Promise.all(
     urls.map(async (u) => {
       try {
-        const r = await safeFetch(u);
+        const r = await fetcher(u);
         if (r.status !== 200) return null;
         const { title } = htmlToText(r.body);
         return key(title).includes(n) && !PARKED.test(title) && !isMarketplaceUrl(r.finalUrl) ? new URL(r.finalUrl).origin + "/" : null;
@@ -192,7 +209,7 @@ export function marketplaceTerms(text: string): Pick<DealInfo, "price" | "origin
 }
 
 const LISTING_PATH = /\/(product-category|category|categories|collections?|shop|tag|tags|products?|deals?|sales?|store|search)(\/|$)/i;
-const TERMS_WORDS = /terms|conditions|legal|agreement|eula|\btos\b/i;
+const TERMS_WORDS = /terms|conditions|legal|agreement|eula|\btos\b|policies/i;
 
 /**
  * Is this fetched page plausibly the kind of document we asked for? Rejects
