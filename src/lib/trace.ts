@@ -1,6 +1,7 @@
 // Unfakeable signals: domain registration date (RDAP) and first Wayback
 // Machine capture. Both are public records the vendor cannot edit.
 import { safeFetch } from "./fetcher/http";
+import { siteOf } from "./fetcher/marketplace";
 
 export interface VendorTrace {
   domain: string;
@@ -12,11 +13,9 @@ export interface VendorTrace {
 }
 
 export function registrableDomain(url: string): string {
-  const host = new URL(url).hostname.replace(/^www\./, "");
-  const parts = host.split(".");
-  // Good enough for common TLDs and two-part ccTLD suffixes like co.uk / com.au.
-  const twoPart = /^(co|com|net|org|gov|ac|edu)\.[a-z]{2}$/.test(parts.slice(-2).join("."));
-  return parts.slice(twoPart ? -3 : -2).join(".");
+  // Good enough for common TLDs, two-part ccTLD suffixes like co.uk / com.au, and
+  // hosting subdomains (foo.pages.dev is not a registered domain, so RDAP says "unknown").
+  return siteOf(new URL(url).hostname.toLowerCase());
 }
 
 const isoDay = (s: string) => (Number.isNaN(Date.parse(s)) ? null : new Date(s).toISOString().slice(0, 10));

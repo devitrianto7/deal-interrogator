@@ -46,16 +46,20 @@ type Report = Awaited<ReturnType<typeof runPipeline>>;
 
 async function runPipeline(url: string, opts: { fresh?: boolean; vendorUrl?: string }) {
   const started = Date.now();
-  const bundle = await collectEvidence(url, opts);
+  // Phase timings go to the server log so slow deals can be diagnosed ([timing] lines).
+  const timings: Record<string, number> = {};
+  const timed = <T,>(k: string, p: Promise<T>) => p.finally(() => (timings[k] = Date.now() - started));
+  const bundle = await timed("collect", collectEvidence(url, opts));
   // The trial needs the extracted claims, so it chains on extraction while reviews and RDAP run alongside.
-  const extracting = extract(bundle);
+  const extracting = timed("extract", extract(bundle));
   const [extraction, court, reviews, trace] = await Promise.all([
     extracting,
-    extracting.then((ex) => holdTrial(bundle, ex.claims)),
-    analyzeReviews(bundle.deal),
-    bundle.deal.vendorUrl ? vendorTrace(bundle.deal.vendorUrl) : Promise.resolve(null),
+    timed("court", extracting.then((ex) => holdTrial(bundle, ex.claims))),
+    timed("reviews", analyzeReviews(bundle.deal)),
+    timed("trace", bundle.deal.vendorUrl ? vendorTrace(bundle.deal.vendorUrl) : Promise.resolve(null)),
   ]);
-  const risk = scoreRisk(bundle.deal, extraction, reviews, trace, bundle.docs.map((x) => x.kind), bundle.docs.find((x) => x.kind === "deal")?.text ?? "");
+  console.log(`[timing] ${url} ${JSON.stringify(timings)} (ms since start)`);
+  const risk = scoreRisk(bundle.deal, extraction, reviews, trace, bundle.docs.map((x) => x.kind), bundle.docs.find((x) => x.kind === "deal")?.text ?? "", bundle.vendorReached !== false);
   const d = bundle.deal;
   return {
     deal: {

@@ -8,6 +8,7 @@ import { safeFetch } from "./http";
 import { cap, extractLinks, htmlToText, normalize, type FoundLink } from "./extract";
 import { isAppSumoUrl, parseAppSumo } from "./appsumo";
 import { findCandidates } from "./discover";
+import { guessVendorDomain, isMarketplaceUrl, marketplaceTerms, plausibleDoc, productName, rankVendorLinks, sameSiteUrl } from "./marketplace";
 import type { DealInfo, DocKind, EvidenceBundle, SourceDoc } from "./types";
 
 export type { EvidenceBundle, SourceDoc, DealInfo } from "./types";
@@ -25,12 +26,15 @@ function makeDoc(kind: DocKind, url: string, status: number, title: string, text
 }
 
 async function fetchDoc(kind: DocKind, url: string): Promise<{ doc: SourceDoc; html: string }> {
+  const t0 = Date.now();
   try {
     const r = await safeFetch(url);
+    console.log(`[fetch] ${kind} ${url} ${r.status} ${Date.now() - t0}ms`);
     const isHtml = /html|xml/i.test(r.contentType) || r.body.trimStart().startsWith("<");
     const { title, text } = isHtml ? htmlToText(r.body) : { title: "", text: normalize(r.body) };
     return { doc: makeDoc(kind, r.finalUrl, r.status, title, text), html: isHtml ? r.body : "" };
   } catch (e) {
+    console.log(`[fetch] ${kind} ${url} ERR ${(e as Error).message} ${Date.now() - t0}ms`);
     return { doc: makeDoc(kind, url, 0, "", "", (e as Error).message), html: "" };
   }
 }
@@ -42,7 +46,7 @@ async function firstGood(kind: DocKind, candidates: string[], exclude: Set<strin
   for (const url of candidates.slice(0, max)) {
     if (exclude.has(url)) continue;
     const { doc } = await fetchDoc(kind, url);
-    if (looksLikeRealPage(doc) && !exclude.has(doc.url)) return doc;
+    if (looksLikeRealPage(doc) && !exclude.has(doc.url) && plausibleDoc(kind, doc.url, doc.title)) return doc;
   }
   return null;
 }
@@ -100,17 +104,30 @@ export async function collectEvidence(inputUrl: string, opts: { fresh?: boolean;
     const { deal: d, dealText } = await parseAppSumo(dealRes.finalUrl, dealRes.body);
     deal = d;
     docs.push(makeDoc("deal", dealRes.finalUrl, 200, `${d.name} | AppSumo`, dealText));
+  } else if (isMarketplaceUrl(dealRes.finalUrl)) {
+    // Third-party marketplace: the vendor is whoever the page links out to, never the marketplace itself.
+    const { title, text } = htmlToText(dealRes.body);
+    const name = productName(dealRes.body, dealRes.finalUrl);
+    deal = { ...genericDeal(dealRes.finalUrl, name, []), ...marketplaceTerms(text), vendorUrl: null };
+    if (!opts.vendorUrl) {
+      const ranked = rankVendorLinks(extractLinks(dealRes.body, dealRes.finalUrl), dealRes.finalUrl, name);
+      deal.vendorUrl = ranked[0] ?? (await guessVendorDomain(name, dealRes.finalUrl));
+    }
+    docs.push(makeDoc("deal", dealRes.finalUrl, 200, title, text));
   } else {
     const { title, text } = htmlToText(dealRes.body);
     deal = genericDeal(dealRes.finalUrl, title, extractLinks(dealRes.body, dealRes.finalUrl));
     docs.push(makeDoc("deal", dealRes.finalUrl, 200, title, text));
   }
   if (opts.vendorUrl) deal.vendorUrl = opts.vendorUrl;
+  // A vendor "site" on the marketplace's own domain is the marketplace's pages, not the vendor's.
+  if (deal.vendorUrl && isMarketplaceUrl(dealRes.finalUrl) && (sameSiteUrl(deal.vendorUrl, dealRes.finalUrl) || isMarketplaceUrl(deal.vendorUrl)))
+    deal.vendorUrl = null;
 
   // 2. Vendor homepage
   if (!deal.vendorUrl) {
-    warnings.push("Could not find the vendor's website on the deal page; pass vendorUrl to compare against official pages.");
-    return save(file, { inputUrl, collectedAt: now(), deal, docs, warnings });
+    warnings.push("Could not reach the vendor's own site: no vendor website found on the deal page (pass vendorUrl to compare against official pages).");
+    return save(file, { inputUrl, collectedAt: now(), deal, docs, warnings, vendorReached: false });
   }
   const home = await fetchDoc("vendor_home", deal.vendorUrl);
   docs.push(home.doc);
@@ -138,7 +155,10 @@ export async function collectEvidence(inputUrl: string, opts: { fresh?: boolean;
   if (refund && refund.url !== terms?.url) docs.push(refund);
   else warnings.push("No separate vendor refund page; refund terms come from the deal page and ToS.");
 
-  return save(file, { inputUrl, collectedAt: now(), deal, docs, warnings });
+  // Honest coverage: official vendor pages count only if the homepage answered and terms or pricing were read.
+  const vendorReached = home.doc.status === 200 && !!(terms || pricing);
+  if (!vendorReached) warnings.unshift("Could not reach the vendor's own site: its terms and pricing pages could not be read.");
+  return save(file, { inputUrl, collectedAt: now(), deal, docs, warnings, vendorReached });
 }
 
 async function save(file: string, b: EvidenceBundle): Promise<EvidenceBundle> {

@@ -22,7 +22,9 @@ export interface SignalScore {
   evidence: Evidence[];
 }
 
-export type Verdict = "Buy" | "Wait" | "Skip";
+// "Unverified": the vendor's own site could not be read, so the score rests on the
+// marketplace page alone and cannot support a Buy (or a Wait that implies we checked).
+export type Verdict = "Buy" | "Wait" | "Skip" | "Unverified";
 
 export interface Coverage {
   terms: boolean;
@@ -62,6 +64,7 @@ export function scoreRisk(
   trace: VendorTrace | null,
   docKinds: string[],
   dealText = "",
+  vendorReached = true,
 ): RiskReport {
   const coverage: Coverage = {
     terms: docKinds.includes("terms"),
@@ -274,6 +277,12 @@ export function scoreRisk(
   if (verdict === "Buy" && !coverage.terms) {
     verdict = "Wait";
     verdictNote = `Score is low, but the ${coverage.missing.join(", ")} could not be read, so the low score is not proof of safety.`;
+  }
+  // Never imply a clean bill of health when the vendor's own pages were never read.
+  // Skip stands: evidence against the deal was found even without them.
+  if (!vendorReached && verdict !== "Skip") {
+    verdict = "Unverified";
+    verdictNote = `Not enough evidence: could not reach the vendor's own site (its terms and pricing), so the ${score}/100 score covers only the marketplace page and reviews. Re-run with the vendor's website to get a real verdict.`;
   }
   return { score, verdict, verdictNote, coverage, signals };
 }

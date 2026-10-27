@@ -10,6 +10,7 @@ const VERDICT_STYLE = {
   Buy: { color: "text-buy", bg: "bg-buy", line: "Low risk on the evidence we could read." },
   Wait: { color: "text-wait", bg: "bg-wait", line: "Real concerns. Read the receipts before you buy." },
   Skip: { color: "text-skip", bg: "bg-skip", line: "The evidence points against this deal." },
+  Unverified: { color: "text-muted", bg: "bg-muted", line: "Not enough evidence: we could not reach the vendor's own site." },
 } as const;
 
 const RULING_STYLE = {

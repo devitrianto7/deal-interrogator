@@ -60,4 +60,7 @@ export interface EvidenceBundle {
   deal: DealInfo;
   docs: SourceDoc[];
   warnings: string[];
+  // False when the vendor's own official pages (home + terms or pricing) could not be read.
+  // Older cached bundles lack it; treat undefined as reached.
+  vendorReached?: boolean;
 }
