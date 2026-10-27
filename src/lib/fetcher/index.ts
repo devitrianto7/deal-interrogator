@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { safeFetch, type FetchResult } from "./http";
-import { curlFetch, FALLBACK_TIMEOUT_MS, readerFetch, waybackLatest } from "./fallback";
+import { curlFetch, FALLBACK_TIMEOUT_MS, readerFetch, tinyfishFetch, waybackLatest } from "./fallback";
 import { archiveFetch, asOfCutoff } from "./wayback";
 import { cap, extractLinks, htmlToText, normalize, type FoundLink } from "./extract";
 import { isAppSumoUrl, parseAppSumo } from "./appsumo";
@@ -62,7 +62,7 @@ function makeDoc(
 type Getter = (url: string) => Promise<FetchResult & { snapshotUrl?: string | null; capturedAt?: string | null }>;
 const getterFor = (asOf?: string): Getter => (asOf ? (u) => archiveFetch(u, asOf) : (u) => safeFetch(u, undefined, FALLBACK_TIMEOUT_MS));
 
-// Per-analysis fetch state. Fallbacks run only in live mode; the slow ones (reader, Wayback)
+// Per-analysis fetch state. Fallbacks run only in live mode; the slow ones (TinyFish, reader, Wayback)
 // have a deadline and a use budget so one analysis stays well under a minute.
 interface Ctx {
   get: Getter;
@@ -70,11 +70,12 @@ interface Ctx {
   heavyUntil: number;
   heavyLeft: number;
   curlHosts: Set<string>; // hosts whose shield blocks Node but serves curl: go straight to curl
+  tinyfishDown: boolean;
   readerDown: boolean;
   waybackDown: boolean;
 }
 
-const HEAVY_WINDOW_MS = 35_000;
+const HEAVY_WINDOW_MS = 45_000;
 const HEAVY_USES = 4;
 
 function newCtx(asOf?: string): Ctx {
@@ -84,6 +85,7 @@ function newCtx(asOf?: string): Ctx {
     heavyUntil: Date.now() + HEAVY_WINDOW_MS,
     heavyLeft: HEAVY_USES,
     curlHosts: new Set(),
+    tinyfishDown: !process.env.TINYFISH_API_KEY,
     readerDown: false,
     waybackDown: false,
   };
@@ -123,7 +125,8 @@ async function plainDoc(kind: DocKind, url: string, fetcher: Getter, label: stri
 /**
  * Fetch one page. Live mode falls back when a page refuses the plain fetch:
  * blocked (403/202/0...) -> curl; still blocked or JavaScript-only, and `heavy` allowed ->
- * the r.jina.ai reader, then the latest Wayback capture (both marked on the doc as `via`).
+ * TinyFish Fetch (when a key is set), the r.jina.ai reader, then the latest Wayback capture
+ * (all marked on the doc as `via`).
  */
 async function fetchDoc(kind: DocKind, url: string, ctx: Ctx, heavy = false): Promise<Fetched> {
   const host = hostOf(url);
@@ -141,7 +144,19 @@ async function fetchDoc(kind: DocKind, url: string, ctx: Ctx, heavy = false): Pr
   const jsOnly = best.doc.status === 200 && best.doc.text.length < MIN_TEXT;
   if (!heavy || !(BLOCKED(best.doc.status) || jsOnly) || ctx.heavyLeft <= 0 || Date.now() > ctx.heavyUntil) return best;
   ctx.heavyLeft--;
-  if (!ctx.readerDown) {
+  if (!ctx.tinyfishDown) {
+    const t0 = Date.now();
+    try {
+      const page = await tinyfishFetch(url);
+      console.log(`[fetch] ${kind} (tinyfish) ${url} ${page ? page.text.length + " chars" : "no page"} ${Date.now() - t0}ms`);
+      if (page && normalize(page.text).length >= MIN_TEXT)
+        return { doc: makeDoc(kind, page.url, 200, page.title, normalize(page.text), undefined, null, "tinyfish"), html: "", base: page.url, links: page.links };
+    } catch (e) {
+      console.log(`[fetch] ${kind} (tinyfish) ${url} ERR ${(e as Error).message} ${Date.now() - t0}ms`);
+      if (/refused/.test((e as Error).message)) ctx.tinyfishDown = true;
+    }
+  }
+  if (!ctx.readerDown && Date.now() < ctx.heavyUntil) {
     const t0 = Date.now();
     try {
       const page = await readerFetch(url);
@@ -376,7 +391,7 @@ export async function collectEvidence(
       const r = await fetchDoc("vendor_home", tryRoot, ctx);
       if (looksLikeRealPage(r.doc)) [home, fellBack] = [r, true];
     }
-    // Still unreadable: rendered text (reader) or the latest Wayback capture.
+    // Still unreadable: rendered text (TinyFish, reader) or the latest Wayback capture.
     if (!looksLikeRealPage(home.doc)) {
       const r = await fetchDoc("vendor_home", given, ctx, true);
       if (looksLikeRealPage(r.doc)) home = r;
@@ -400,6 +415,7 @@ export async function collectEvidence(
     if (fellBack || SHORTENERS.test(hostOf(deal.vendorUrl).replace(/^www\./, ""))) deal.vendorUrl = new URL(home.base).origin + "/";
   }
   docs.push(home.doc);
+  if (home.doc.via === "tinyfish") warnings.push("Vendor homepage was read through a rendering browser (TinyFish Fetch) because a plain fetch got no readable text.");
   if (home.doc.via === "reader") warnings.push("Vendor homepage was read through a rendering reader (r.jina.ai) because a plain fetch got no readable text.");
   if (home.doc.via === "wayback") warnings.push(`Vendor homepage could not be fetched live; its latest Wayback capture (${home.doc.capturedAt}) was read instead.`);
   if (!looksLikeRealPage(home.doc))
@@ -428,7 +444,7 @@ export async function collectEvidence(
   const candidates = (kind: "vendor_pricing" | "terms" | "refund") => [
     ...new Set(origins.flatMap((o, i) => findCandidates(links, i === 0 ? vendorHome : o + "/", kind, sitemap))),
   ];
-  // Reader/Wayback for subpages only when the homepage itself needed them, and only for linked pages.
+  // TinyFish/reader/Wayback for subpages only when the homepage itself needed them, and only for linked pages.
   const viaHeavy = !!home.doc.via;
   const linked = (cands: string[]) => new Set(viaHeavy ? cands.filter((c) => links.some((l) => l.href === c)).slice(0, 2) : []);
 

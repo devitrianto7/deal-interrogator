@@ -25,6 +25,8 @@ These three reports are pinned in `src/demo/` so the demo is stable. Any other U
 
 Deals were picked from AppSumo's public deals API: currently on sale, "Lifetime access" in the terms, and the most reviews. Summaries live in `src/docket/index.json` and full reports in `src/docket/<slug>.json`; they are snapshots dated in each report.
 
+Current docket: 199 deals: 40 Buy, 131 Wait, 11 Skip, 17 Unverified (vendor terms and pricing could not be read, so no verdict is given). The 29 deals that were Unverified were re-run on 2026-10-27 with the TinyFish Fetch fallback: 12 got a real verdict (3 Buy, 9 Wait) and 17 stay Unverified (2 with no vendor website on the deal page, 2 whose sites stay empty even when rendered, 13 whose homepage could be read but had no terms or pricing page we could find).
+
 ## How it works
 ```
 URL ─► 1 Collect ─► 2 Extract ─► 3 Verify quotes ─► 4 Score (code) ─► Verdict
@@ -34,7 +36,7 @@ URL ─► 1 Collect ─► 2 Extract ─► 3 Verify quotes ─► 4 Score (cod
               └─► 5 Courtroom: Prosecutor ∥ Defender ─► Judge
 ```
 1. **Collect** (`src/lib/fetcher/`): for AppSumo, parses the page's embedded data (plans, per-tier terms, features, FAQs, review stats) and the public reviews API; then discovers the vendor's homepage, pricing, terms and refund pages. SSRF-guarded fetches, 24 h cache.
-   Vendor discovery: AppSumo's `product_url`, else any link in the deal data whose host matches the product name, else a `<name>.com/.io/.ai/.app` domain whose homepage title names the product (flagged in the warnings). Short links are followed and reported as the real domain; a failing landing subpage falls back to the root site. Pages that refuse Node's fetch (bot-shield 403s) are retried with curl; JavaScript-only or still-blocked homepages fall back to the r.jina.ai reader, then the latest Wayback capture, and those documents are marked `via` in the sources. Terms and pricing come from homepage links, `/sitemap.xml`, then common paths; a homepage pricing section with prices counts as the pricing source. A legal notice (imprint) is never counted as terms.
+   Vendor discovery: AppSumo's `product_url`, else any link in the deal data whose host matches the product name, else a `<name>.com/.io/.ai/.app` domain whose homepage title names the product (flagged in the warnings). Short links are followed and reported as the real domain; a failing landing subpage falls back to the root site. Pages that refuse Node's fetch (bot-shield 403s) are retried with curl; JavaScript-only or still-blocked homepages fall back to TinyFish Fetch (a rendering browser; only when `TINYFISH_API_KEY` is set, free up to 1,000 URLs/day), then the r.jina.ai reader, then the latest Wayback capture, and those documents are marked `via` in the sources. Terms and pricing come from homepage links, `/sitemap.xml`, then common paths; a homepage pricing section with prices counts as the pricing source. A legal notice (imprint) is never counted as terms.
 2. **Extract** (`src/lib/extract.ts`): two parallel Muse Spark calls return JSON: the seller's claims from the deal page, and fine print (lifetime definition, caps, refund, change/discontinue clauses) from the official docs.
 3. **Verify** (`src/lib/quotes.ts`): every quote must appear verbatim (whitespace and punctuation normalised) in the document it cites, or it is dropped.
 4. **Score** (`src/lib/score.ts`): the model never sets points. Code maps verified evidence to an 8-signal rubric (100 points):

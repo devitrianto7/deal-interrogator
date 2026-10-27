@@ -324,7 +324,7 @@ export function ReportView({ report, onRerun }: { report: Report; onRerun: () =>
               </a>
               {"via" in s && s.via && (
                 <span className="shrink-0 font-mono text-[11px] text-muted">
-                  {s.via === "reader" ? "via reader" : `archived ${"capturedAt" in s ? s.capturedAt : ""}`}
+                  {s.via === "tinyfish" ? "via TinyFish" : s.via === "reader" ? "via reader" : `archived ${"capturedAt" in s ? s.capturedAt : ""}`}
                 </span>
               )}
             </li>

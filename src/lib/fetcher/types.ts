@@ -13,8 +13,9 @@ export interface SourceDoc {
   fetchedAt: string; // ISO
   error?: string;
   capturedAt?: string; // YYYY-MM-DD of the Wayback capture this text came from (as-of mode, or via "wayback")
-  // Live-mode fallback that produced the text: "reader" = r.jina.ai rendering, "wayback" = latest capture.
-  via?: "reader" | "wayback";
+  // Live-mode fallback that produced the text: "tinyfish" = TinyFish Fetch rendering,
+  // "reader" = r.jina.ai rendering, "wayback" = latest capture.
+  via?: "tinyfish" | "reader" | "wayback";
 }
 
 export interface DealPlan {
