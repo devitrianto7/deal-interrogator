@@ -5,6 +5,7 @@ import { analyzeReviews } from "./reviews";
 import { vendorTrace } from "./trace";
 import { scoreRisk } from "./score";
 import { holdTrial } from "./courtroom";
+import { asOfMs } from "./fetcher/wayback";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -13,18 +14,23 @@ import path from "node:path";
 // (and costs nothing) until someone asks for a fresh run.
 const REPORT_DIR = path.join(process.cwd(), ".data", "reports-cache");
 const REPORT_TTL_MS = 24 * 3_600_000;
-const reportFile = (url: string, vendorUrl?: string) =>
-  path.join(REPORT_DIR, createHash("sha256").update(`${url}|${vendorUrl ?? ""}`).digest("hex").slice(0, 24) + ".json");
+const reportFile = (url: string, vendorUrl?: string, asOf?: string) =>
+  path.join(
+    REPORT_DIR,
+    createHash("sha256").update(`${url}|${vendorUrl ?? ""}${asOf ? `|asof:${asOf}` : ""}`).digest("hex").slice(0, 24) + ".json",
+  );
 
 // Demo cases ship with the repo (src/demo/*.json) so judges get an instant, stable report.
 // "Run fresh" still re-runs the whole pipeline live.
 const DEMO_DIR = path.join(process.cwd(), "src", "demo");
 const demoSlug = (url: string) => url.match(/appsumo\.com\/products\/([a-z0-9-]+)/i)?.[1]?.toLowerCase();
 
-export async function analyzeDeal(url: string, opts: { fresh?: boolean; vendorUrl?: string } = {}) {
-  const file = reportFile(url, opts.vendorUrl);
+type Opts = { fresh?: boolean; vendorUrl?: string; asOf?: string };
+
+export async function analyzeDeal(url: string, opts: Opts = {}) {
+  const file = reportFile(url, opts.vendorUrl, opts.asOf);
   const slug = demoSlug(url);
-  if (!opts.fresh && slug && !opts.vendorUrl) {
+  if (!opts.fresh && slug && !opts.vendorUrl && !opts.asOf) {
     try {
       const pinned = JSON.parse(await readFile(path.join(DEMO_DIR, `${slug}.json`), "utf8")) as Report & { generatedAt: string };
       return { ...pinned, cached: true, pinned: true };
@@ -44,7 +50,7 @@ export async function analyzeDeal(url: string, opts: { fresh?: boolean; vendorUr
 
 type Report = Awaited<ReturnType<typeof runPipeline>>;
 
-async function runPipeline(url: string, opts: { fresh?: boolean; vendorUrl?: string }) {
+async function runPipeline(url: string, opts: Opts) {
   const started = Date.now();
   // Phase timings go to the server log so slow deals can be diagnosed ([timing] lines).
   const timings: Record<string, number> = {};
@@ -56,12 +62,23 @@ async function runPipeline(url: string, opts: { fresh?: boolean; vendorUrl?: str
     extracting,
     timed("court", extracting.then((ex) => holdTrial(bundle, ex.claims))),
     timed("reviews", analyzeReviews(bundle.deal)),
-    timed("trace", bundle.deal.vendorUrl ? vendorTrace(bundle.deal.vendorUrl) : Promise.resolve(null)),
+    timed("trace", bundle.deal.vendorUrl ? vendorTrace(bundle.deal.vendorUrl, opts.asOf) : Promise.resolve(null)),
   ]);
   console.log(`[timing] ${url} ${JSON.stringify(timings)} (ms since start)`);
-  const risk = scoreRisk(bundle.deal, extraction, reviews, trace, bundle.docs.map((x) => x.kind), bundle.docs.find((x) => x.kind === "deal")?.text ?? "", bundle.vendorReached !== false);
+  const refMs = opts.asOf ? asOfMs(opts.asOf) : Date.now();
+  const risk = scoreRisk(
+    bundle.deal,
+    extraction,
+    reviews,
+    trace,
+    bundle.docs.map((x) => x.kind),
+    bundle.docs.find((x) => x.kind === "deal")?.text ?? "",
+    bundle.vendorReached !== false,
+    refMs,
+  );
   const d = bundle.deal;
   return {
+    asOf: opts.asOf ?? null,
     deal: {
       name: d.name,
       tagline: d.tagline,
@@ -80,7 +97,7 @@ async function runPipeline(url: string, opts: { fresh?: boolean; vendorUrl?: str
     courtroom: court,
     reviews,
     trace,
-    sources: bundle.docs.map((x) => ({ kind: x.kind, url: x.url, title: x.title, chars: x.chars })),
+    sources: bundle.docs.map((x) => ({ kind: x.kind, url: x.url, title: x.title, chars: x.chars, ...(x.capturedAt ? { capturedAt: x.capturedAt } : {}) })),
     warnings: [...bundle.warnings, ...(trace?.errors ?? [])],
     dropped: extraction.dropped,
     costUsd: Math.round((extraction.costUsd + reviews.costUsd + court.costUsd) * 1e6) / 1e6,

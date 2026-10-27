@@ -50,7 +50,8 @@ const theme = (r: ReviewAnalysis, k: string) => r.themes.find((t) => t.theme ===
 // overstates problems on deals with hundreds of reviews. Judge hits as a share of all reviews.
 const share = (r: ReviewAnalysis, n: number) => (r.stats?.count ? n / r.stats.count : n > 0 ? 1 : 0);
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
-const yearsSince = (d: string | null) => (d ? (Date.now() - Date.parse(d)) / (365.25 * 864e5) : null);
+// `ref` is "now" in live mode and the as-of day in a backtest, so vendor age is measured as it was then.
+const yearsSince = (d: string | null, ref = Date.now()) => (d ? (ref - Date.parse(d)) / (365.25 * 864e5) : null);
 
 const PRODUCT_LIFETIME = /lifetime of (the )?(product|service|company|business|platform|plan|software|app)|as long as (the )?(product|service|company)|product('s)? lifetime/i;
 const BUYER_LIFETIME = /lifetime of (the )?(user|buyer|customer|account holder|purchaser)|for as long as you/i;
@@ -65,6 +66,7 @@ export function scoreRisk(
   docKinds: string[],
   dealText = "",
   vendorReached = true,
+  refMs = Date.now(),
 ): RiskReport {
   const coverage: Coverage = {
     terms: docKinds.includes("terms"),
@@ -209,8 +211,8 @@ export function scoreRisk(
 
   // 6. Vendor age & track record (10)
   {
-    const regY = yearsSince(trace?.registered ?? null);
-    const snapY = yearsSince(trace?.firstSnapshot ?? null);
+    const regY = yearsSince(trace?.registered ?? null, refMs);
+    const snapY = yearsSince(trace?.firstSnapshot ?? null, refMs);
     const age = Math.max(regY ?? 0, snapY ?? 0);
     let points = 0;
     const evidence: Evidence[] = [];

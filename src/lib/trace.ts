@@ -2,6 +2,7 @@
 // Machine capture. Both are public records the vendor cannot edit.
 import { safeFetch } from "./fetcher/http";
 import { siteOf } from "./fetcher/marketplace";
+import { asOfCutoff, firstCapture } from "./fetcher/wayback";
 
 export interface VendorTrace {
   domain: string;
@@ -20,7 +21,11 @@ export function registrableDomain(url: string): string {
 
 const isoDay = (s: string) => (Number.isNaN(Date.parse(s)) ? null : new Date(s).toISOString().slice(0, 10));
 
-export async function vendorTrace(vendorUrl: string): Promise<VendorTrace> {
+// As-of mode: a registration date or first capture on/after the as-of day is discarded
+// (a domain re-registered after it dropped would otherwise look brand new, or leak the outcome).
+export async function vendorTrace(vendorUrl: string, asOf?: string): Promise<VendorTrace> {
+  const cutoffDay = asOf ? `${asOf.slice(0, 4)}-${asOf.slice(4, 6)}-${asOf.slice(6, 8)}` : null;
+  if (asOf) asOfCutoff(asOf);
   const domain = registrableDomain(vendorUrl);
   const rdapUrl = `https://rdap.org/domain/${domain}`;
   const errors: string[] = [];
@@ -31,7 +36,12 @@ export async function vendorTrace(vendorUrl: string): Promise<VendorTrace> {
       if (r.status !== 200) throw new Error(`RDAP HTTP ${r.status}`);
       const ev = (JSON.parse(r.body).events ?? []) as { eventAction: string; eventDate: string }[];
       const reg = ev.find((e) => e.eventAction === "registration");
-      return reg ? isoDay(reg.eventDate) : null;
+      const day = reg ? isoDay(reg.eventDate) : null;
+      if (day && cutoffDay && day >= cutoffDay) {
+        errors.push(`RDAP: current registration (${day}) is after the as-of date; domain was likely re-registered, so age is unknown.`);
+        return null;
+      }
+      return day;
     } catch (e) {
       errors.push(`RDAP: ${(e as Error).message}`);
       return null;
@@ -40,16 +50,8 @@ export async function vendorTrace(vendorUrl: string): Promise<VendorTrace> {
 
   const wayback = (async () => {
     try {
-      const r = await safeFetch(
-        `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(domain)}&limit=1&output=json&fl=timestamp,original`,
-        "application/json",
-      );
-      if (r.status !== 200) throw new Error(`Wayback HTTP ${r.status}`);
-      const rows = JSON.parse(r.body) as string[][];
-      const ts = rows[1]?.[0];
-      if (!ts) return { date: null, url: null };
-      const date = `${ts.slice(0, 4)}-${ts.slice(4, 6)}-${ts.slice(6, 8)}`;
-      return { date, url: `https://web.archive.org/web/${ts}/${rows[1][1]}` };
+      const fc = await firstCapture(domain, asOf);
+      return fc ? { date: fc.date, url: fc.url } : { date: null, url: null };
     } catch (e) {
       errors.push(`Wayback: ${(e as Error).message}`);
       return { date: null, url: null };

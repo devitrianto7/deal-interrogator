@@ -4,7 +4,8 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { safeFetch } from "./http";
+import { safeFetch, type FetchResult } from "./http";
+import { archiveFetch, asOfCutoff } from "./wayback";
 import { cap, extractLinks, htmlToText, normalize, type FoundLink } from "./extract";
 import { isAppSumoUrl, parseAppSumo } from "./appsumo";
 import { findCandidates } from "./discover";
@@ -21,32 +22,38 @@ const MIN_TEXT = 300;
 
 const now = () => new Date().toISOString();
 
-function makeDoc(kind: DocKind, url: string, status: number, title: string, text: string, error?: string): SourceDoc {
-  return { kind, url, status, title, text: cap(text), chars: text.length, fetchedAt: now(), ...(error ? { error } : {}) };
+function makeDoc(kind: DocKind, url: string, status: number, title: string, text: string, error?: string, capturedAt?: string | null): SourceDoc {
+  return { kind, url, status, title, text: cap(text), chars: text.length, fetchedAt: now(), ...(error ? { error } : {}), ...(capturedAt ? { capturedAt } : {}) };
 }
 
-async function fetchDoc(kind: DocKind, url: string): Promise<{ doc: SourceDoc; html: string }> {
+// Live mode reads the page now; as-of mode reads the latest Wayback capture before the as-of day.
+// `base` is the page's own URL (for resolving links); the doc URL is what the report cites
+// (the live URL, or the Wayback snapshot URL in as-of mode).
+type Getter = (url: string) => Promise<FetchResult & { snapshotUrl?: string | null; capturedAt?: string | null }>;
+const getterFor = (asOf?: string): Getter => (asOf ? (u) => archiveFetch(u, asOf) : (u) => safeFetch(u));
+
+async function fetchDoc(kind: DocKind, url: string, get: Getter): Promise<{ doc: SourceDoc; html: string; base: string }> {
   const t0 = Date.now();
   try {
-    const r = await safeFetch(url);
+    const r = await get(url);
     console.log(`[fetch] ${kind} ${url} ${r.status} ${Date.now() - t0}ms`);
     const isHtml = /html|xml/i.test(r.contentType) || r.body.trimStart().startsWith("<");
     const { title, text } = isHtml ? htmlToText(r.body) : { title: "", text: normalize(r.body) };
-    return { doc: makeDoc(kind, r.finalUrl, r.status, title, text), html: isHtml ? r.body : "" };
+    return { doc: makeDoc(kind, r.snapshotUrl ?? r.finalUrl, r.status, title, text, undefined, r.capturedAt), html: isHtml ? r.body : "", base: r.finalUrl };
   } catch (e) {
     console.log(`[fetch] ${kind} ${url} ERR ${(e as Error).message} ${Date.now() - t0}ms`);
-    return { doc: makeDoc(kind, url, 0, "", "", (e as Error).message), html: "" };
+    return { doc: makeDoc(kind, url, 0, "", "", (e as Error).message), html: "", base: url };
   }
 }
 
 const looksLikeRealPage = (d: SourceDoc) =>
   d.status === 200 && d.text.length >= MIN_TEXT && !/\b(404|not found|page not found)\b/i.test(d.title);
 
-async function firstGood(kind: DocKind, candidates: string[], exclude: Set<string>, max = 5): Promise<SourceDoc | null> {
+async function firstGood(kind: DocKind, candidates: string[], exclude: Set<string>, get: Getter, max = 5): Promise<SourceDoc | null> {
   for (const url of candidates.slice(0, max)) {
     if (exclude.has(url)) continue;
-    const { doc } = await fetchDoc(kind, url);
-    if (looksLikeRealPage(doc) && !exclude.has(doc.url) && plausibleDoc(kind, doc.url, doc.title)) return doc;
+    const { doc, base } = await fetchDoc(kind, url, get);
+    if (looksLikeRealPage(doc) && !exclude.has(base) && plausibleDoc(kind, base, doc.title)) return doc;
   }
   return null;
 }
@@ -79,8 +86,16 @@ function genericDeal(url: string, title: string, links: FoundLink[]): DealInfo {
   };
 }
 
-export async function collectEvidence(inputUrl: string, opts: { fresh?: boolean; vendorUrl?: string } = {}): Promise<EvidenceBundle> {
-  const key = createHash("sha256").update(inputUrl.trim() + "|" + (opts.vendorUrl ?? "")).digest("hex").slice(0, 16);
+export async function collectEvidence(
+  inputUrl: string,
+  opts: { fresh?: boolean; vendorUrl?: string; asOf?: string } = {},
+): Promise<EvidenceBundle> {
+  if (opts.asOf) asOfCutoff(opts.asOf); // validate early
+  const get = getterFor(opts.asOf);
+  const key = createHash("sha256")
+    .update(inputUrl.trim() + "|" + (opts.vendorUrl ?? "") + (opts.asOf ? `|asof:${opts.asOf}` : ""))
+    .digest("hex")
+    .slice(0, 16);
   const file = path.join(CACHE_DIR, `${key}.json`);
   if (!opts.fresh) {
     try {
@@ -95,15 +110,22 @@ export async function collectEvidence(inputUrl: string, opts: { fresh?: boolean;
   const docs: SourceDoc[] = [];
 
   // 1. Deal page
-  const dealRes = await safeFetch(inputUrl);
+  const dealRes = await get(inputUrl);
+  if (opts.asOf && dealRes.status === 404 && !dealRes.body)
+    throw new DealUnavailableError(`No Wayback capture of the deal page before ${opts.asOf}.`);
   if (dealRes.status !== 200) throw new DealUnavailableError(`Deal page returned HTTP ${dealRes.status}`);
+  const dealView = dealRes.snapshotUrl ?? dealRes.finalUrl;
   let deal: DealInfo;
   if (isAppSumoUrl(inputUrl) && !isAppSumoUrl(dealRes.finalUrl))
     throw new DealUnavailableError("AppSumo redirected away from this product page: the deal has likely ended or the URL is wrong.");
-  if (isAppSumoUrl(dealRes.finalUrl)) {
-    const { deal: d, dealText } = await parseAppSumo(dealRes.finalUrl, dealRes.body);
+  // Captures from before AppSumo's current site (roughly pre-2023) have no embedded deal JSON;
+  // in as-of mode those are read as a generic deal page instead of failing.
+  const legacyAppSumo = !!opts.asOf && isAppSumoUrl(dealRes.finalUrl) && !dealRes.body.includes('id="__NEXT_DATA__"');
+  if (isAppSumoUrl(dealRes.finalUrl) && !legacyAppSumo) {
+    const { deal: d, dealText, reviewNote } = await parseAppSumo(dealRes.finalUrl, dealRes.body, { asOf: opts.asOf });
     deal = d;
-    docs.push(makeDoc("deal", dealRes.finalUrl, 200, `${d.name} | AppSumo`, dealText));
+    if (reviewNote) warnings.push(reviewNote);
+    docs.push(makeDoc("deal", dealView, 200, `${d.name} | AppSumo`, dealText, undefined, dealRes.capturedAt));
   } else if (isMarketplaceUrl(dealRes.finalUrl)) {
     // Third-party marketplace: the vendor is whoever the page links out to, never the marketplace itself.
     const { title, text } = htmlToText(dealRes.body);
@@ -111,13 +133,15 @@ export async function collectEvidence(inputUrl: string, opts: { fresh?: boolean;
     deal = { ...genericDeal(dealRes.finalUrl, name, []), ...marketplaceTerms(text), vendorUrl: null };
     if (!opts.vendorUrl) {
       const ranked = rankVendorLinks(extractLinks(dealRes.body, dealRes.finalUrl), dealRes.finalUrl, name);
-      deal.vendorUrl = ranked[0] ?? (await guessVendorDomain(name, dealRes.finalUrl));
+      // Guessing a domain probes the live web, so as-of mode skips it.
+      deal.vendorUrl = ranked[0] ?? (opts.asOf ? null : await guessVendorDomain(name, dealRes.finalUrl));
     }
-    docs.push(makeDoc("deal", dealRes.finalUrl, 200, title, text));
+    docs.push(makeDoc("deal", dealView, 200, title, text, undefined, dealRes.capturedAt));
   } else {
+    if (legacyAppSumo) warnings.push("Archived AppSumo page predates its current layout: plans and reviews could not be parsed, so the page is read as plain text.");
     const { title, text } = htmlToText(dealRes.body);
     deal = genericDeal(dealRes.finalUrl, title, extractLinks(dealRes.body, dealRes.finalUrl));
-    docs.push(makeDoc("deal", dealRes.finalUrl, 200, title, text));
+    docs.push(makeDoc("deal", dealView, 200, title, text, undefined, dealRes.capturedAt));
   }
   if (opts.vendorUrl) deal.vendorUrl = opts.vendorUrl;
   // A vendor "site" on the marketplace's own domain is the marketplace's pages, not the vendor's.
@@ -127,25 +151,27 @@ export async function collectEvidence(inputUrl: string, opts: { fresh?: boolean;
   // 2. Vendor homepage
   if (!deal.vendorUrl) {
     warnings.push("Could not reach the vendor's own site: no vendor website found on the deal page (pass vendorUrl to compare against official pages).");
-    return save(file, { inputUrl, collectedAt: now(), deal, docs, warnings, vendorReached: false });
+    return save(file, { inputUrl, collectedAt: now(), deal, docs, warnings, vendorReached: false, ...(opts.asOf ? { asOf: opts.asOf } : {}) });
   }
-  const home = await fetchDoc("vendor_home", deal.vendorUrl);
+  const home = await fetchDoc("vendor_home", deal.vendorUrl, get);
   docs.push(home.doc);
   if (!looksLikeRealPage(home.doc))
     warnings.push(
       home.doc.status === 200
         ? "Vendor site renders only with JavaScript, so its official pages could not be read as text."
-        : `Vendor homepage could not be fetched (HTTP ${home.doc.status}).`,
+        : opts.asOf && home.doc.status === 404
+          ? `No Wayback capture of the vendor homepage before ${opts.asOf}.`
+          : `Vendor homepage could not be fetched (HTTP ${home.doc.status}).`,
     );
-  const links = home.html ? extractLinks(home.html, home.doc.url) : [];
-  const vendorHome = home.doc.url;
+  const links = home.html ? extractLinks(home.html, home.base) : [];
+  const vendorHome = home.base;
 
   // 3. Pricing, terms, refund (in parallel; each tries links then common paths)
   const used = new Set<string>([vendorHome]);
   const [pricing, terms, refund] = await Promise.all([
-    firstGood("vendor_pricing", findCandidates(links, vendorHome, "vendor_pricing"), used),
-    firstGood("terms", findCandidates(links, vendorHome, "terms"), used),
-    firstGood("refund", findCandidates(links, vendorHome, "refund"), used),
+    firstGood("vendor_pricing", findCandidates(links, vendorHome, "vendor_pricing"), used, get),
+    firstGood("terms", findCandidates(links, vendorHome, "terms"), used, get),
+    firstGood("refund", findCandidates(links, vendorHome, "refund"), used, get),
   ]);
   if (pricing) docs.push(pricing);
   else if (/pricing/i.test(home.doc.text)) warnings.push("No separate pricing page; pricing may be on the homepage.");
@@ -158,7 +184,7 @@ export async function collectEvidence(inputUrl: string, opts: { fresh?: boolean;
   // Honest coverage: official vendor pages count only if the homepage answered and terms or pricing were read.
   const vendorReached = home.doc.status === 200 && !!(terms || pricing);
   if (!vendorReached) warnings.unshift("Could not reach the vendor's own site: its terms and pricing pages could not be read.");
-  return save(file, { inputUrl, collectedAt: now(), deal, docs, warnings, vendorReached });
+  return save(file, { inputUrl, collectedAt: now(), deal, docs, warnings, vendorReached, ...(opts.asOf ? { asOf: opts.asOf } : {}) });
 }
 
 async function save(file: string, b: EvidenceBundle): Promise<EvidenceBundle> {

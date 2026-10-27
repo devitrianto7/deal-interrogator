@@ -46,12 +46,42 @@ async function fetchReviews(dealId: number, rating?: number): Promise<any[]> {
   }
 }
 
+// As-of mode: the reviews API is live, so a review is kept only if it was written before the
+// cutoff AND not edited on or after it (an "UPDATE: it shut down" edit would leak the outcome).
+function writtenBefore(c: any, cutoffMs: number): boolean {
+  const created = Date.parse(String(c.created ?? c.submit_date ?? ""));
+  if (Number.isNaN(created) || created >= cutoffMs) return false;
+  const modified = Date.parse(String(c.modified ?? ""));
+  if (c.edited && (Number.isNaN(modified) || modified >= cutoffMs)) return false;
+  return true;
+}
+
+// Walks newest-first pages until `want` pre-cutoff reviews are found (or pages run out).
+async function fetchReviewsBefore(dealId: number, cutoffMs: number, rating?: number, want = 20, maxPages = 12): Promise<any[]> {
+  const out: any[] = [];
+  for (let page = 1; page <= maxPages && out.length < want; page++) {
+    const qs = rating ? `&rating=${rating}` : "";
+    let list: any[] = [];
+    try {
+      const r = await safeFetch(`https://appsumo.com/api/v2/deals/${dealId}/reviews/?page=${page}${qs}`, "application/json");
+      if (r.status !== 200) break;
+      list = JSON.parse(r.body).comments ?? [];
+    } catch {
+      break;
+    }
+    if (!list.length) break;
+    out.push(...list.filter((c) => writtenBefore(c, cutoffMs)));
+  }
+  return out.slice(0, want);
+}
+
 export interface AppSumoParse {
   deal: DealInfo;
   dealText: string; // the page's own words, for verbatim quote checks
+  reviewNote?: string;
 }
 
-export async function parseAppSumo(url: string, html: string): Promise<AppSumoParse> {
+export async function parseAppSumo(url: string, html: string, opts: { asOf?: string } = {}): Promise<AppSumoParse> {
   const $ = cheerio.load(html);
   const raw = $("script#__NEXT_DATA__").first().text();
   if (!raw) throw new Error("AppSumo page has no __NEXT_DATA__ (layout changed or blocked)");
@@ -88,12 +118,28 @@ export async function parseAppSumo(url: string, html: string): Promise<AppSumoPa
   // Newest reviews + every critical review (1-3 stars). The rating filter can
   // return reviews from earlier campaigns of the same product (other deal ids).
   const dealId = Number(d.id);
-  const [newest, r1, r2, r3] = await Promise.all([
-    fetchReviews(dealId),
-    fetchReviews(dealId, 1),
-    fetchReviews(dealId, 2),
-    fetchReviews(dealId, 3),
-  ]);
+  let newest: any[], r1: any[], r2: any[], r3: any[];
+  let reviewNote: string | undefined;
+  if (opts.asOf) {
+    const cutoffMs = Date.parse(`${opts.asOf.slice(0, 4)}-${opts.asOf.slice(4, 6)}-${opts.asOf.slice(6, 8)}T00:00:00Z`);
+    // Reviews embedded in the archived page come first (they are exactly what was public then).
+    const archived = ((pp.reviews?.comments ?? []) as any[]).filter((c) => writtenBefore(c, cutoffMs));
+    [newest, r1, r2, r3] = await Promise.all([
+      fetchReviewsBefore(dealId, cutoffMs),
+      fetchReviewsBefore(dealId, cutoffMs, 1, 10, 5),
+      fetchReviewsBefore(dealId, cutoffMs, 2, 10, 5),
+      fetchReviewsBefore(dealId, cutoffMs, 3, 10, 5),
+    ]);
+    newest = [...newest, ...archived];
+    reviewNote = `As-of ${opts.asOf}: review stats come from the archived page; review texts are only those written before ${opts.asOf} and never edited after it.`;
+  } else {
+    [newest, r1, r2, r3] = await Promise.all([
+      fetchReviews(dealId),
+      fetchReviews(dealId, 1),
+      fetchReviews(dealId, 2),
+      fetchReviews(dealId, 3),
+    ]);
+  }
   const base = newest.length ? newest : (pp.reviews?.comments ?? []);
   const seen = new Set<number>();
   const all: { c: any; sample: DealReview["sample"] }[] = [];
@@ -144,5 +190,5 @@ export async function parseAppSumo(url: string, html: string): Promise<AppSumoPa
     lines.push("## Reviews");
     for (const r of deal.reviews) lines.push(`[review ${r.id}, ${r.rating ?? "?"}/5] ${r.title}: ${r.text}`);
   }
-  return { deal, dealText: lines.filter(Boolean).join("\n") };
+  return { deal, dealText: lines.filter(Boolean).join("\n"), reviewNote };
 }

@@ -12,6 +12,7 @@ export interface SourceDoc {
   chars: number; // length before capping
   fetchedAt: string; // ISO
   error?: string;
+  capturedAt?: string; // as-of mode: YYYY-MM-DD of the Wayback capture this text came from
 }
 
 export interface DealPlan {
@@ -63,4 +64,5 @@ export interface EvidenceBundle {
   // False when the vendor's own official pages (home + terms or pricing) could not be read.
   // Older cached bundles lack it; treat undefined as reached.
   vendorReached?: boolean;
+  asOf?: string; // YYYYMMDD: evidence reconstructed from Wayback captures before this day
 }
