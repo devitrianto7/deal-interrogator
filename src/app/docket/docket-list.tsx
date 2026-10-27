@@ -20,8 +20,14 @@ export function DocketList({ entries }: { entries: DocketEntry[] }) {
     const list = entries.filter(
       (e) => (filter === "All" || e.verdict === filter) && (!needle || e.name.toLowerCase().includes(needle)),
     );
+    // An Unverified score covers only the marketplace page, so it never ranks as "safest".
+    const unv = (e: DocketEntry) => (e.verdict === "Unverified" ? 1 : 0);
     return [...list].sort((a, b) =>
-      sort === "name" ? a.name.localeCompare(b.name) : sort === "risk-asc" ? a.score - b.score : b.score - a.score,
+      sort === "name"
+        ? a.name.localeCompare(b.name)
+        : sort === "risk-asc"
+          ? unv(a) - unv(b) || a.score - b.score
+          : b.score - a.score,
     );
   }, [entries, filter, sort, q]);
 
