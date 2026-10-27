@@ -1,6 +1,6 @@
 # Deal Interrogator
 
-**Live:** https://deal.nogap.tech
+**Live:** https://deal.nogap.tech · **Demo video (2:41):** https://youtu.be/4P2WdAkbhfA
 
 Paste a lifetime-deal URL (AppSumo or any deal page). Deal Interrogator puts the vendor's promises on trial: it collects their own pages, the terms and refund fine print, and buyer reviews, cross-examines every key claim in a courtroom of models, and rules **Buy / Wait / Skip** with a 0-100 risk score.
 
