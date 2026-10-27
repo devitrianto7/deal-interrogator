@@ -44,6 +44,8 @@ export interface ReviewAnalysis {
   themes: ReviewTheme[];
   droppedQuotes: number;
   costUsd: number;
+  basetenUsd?: number;
+  fallback?: string;
 }
 
 const avg = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 100) / 100 : null);
@@ -145,5 +147,5 @@ export async function analyzeReviews(deal: DealInfo): Promise<ReviewAnalysis> {
     });
   }
   themes.sort((a, b) => b.hits.length - a.hits.length);
-  return { ...base, themes, droppedQuotes: dropped, costUsd: res.costUsd };
+  return { ...base, themes, droppedQuotes: dropped, costUsd: res.costUsd, basetenUsd: res.basetenUsd, ...(res.fallback ? { fallback: res.fallback } : {}) };
 }

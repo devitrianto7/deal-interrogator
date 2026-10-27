@@ -46,3 +46,42 @@ export function recordSpend(usd: number): Promise<Ledger> {
   queue = job.catch(() => undefined);
   return job;
 }
+
+// Baseten spend has its own ledger and cap so it never counts against the Meta guard above.
+// Credit is prepaid ($100), so the cap only stops a runaway loop; at the cap calls fall back to Meta.
+const BASETEN_LEDGER = path.join(process.cwd(), ".data", "usage-baseten.json");
+export const BASETEN_BUDGET_USD = Number(process.env.BASETEN_BUDGET_USD ?? 50);
+
+type BasetenLedger = Ledger & { promptTokens: number; completionTokens: number; reasoningTokens: number };
+type TokenUsage = { prompt_tokens?: number; completion_tokens?: number; completion_tokens_details?: { reasoning_tokens?: number } | null };
+
+async function readBaseten(): Promise<BasetenLedger> {
+  try {
+    return JSON.parse(await fs.readFile(BASETEN_LEDGER, "utf8")) as BasetenLedger;
+  } catch {
+    return { spentUsd: 0, calls: 0, promptTokens: 0, completionTokens: 0, reasoningTokens: 0, updatedAt: new Date().toISOString() };
+  }
+}
+
+export const getBasetenSpend = readBaseten;
+
+export async function basetenBudgetLeft(): Promise<boolean> {
+  return (await readBaseten()).spentUsd < BASETEN_BUDGET_USD;
+}
+
+export function recordBasetenUsage(usd: number, usage: TokenUsage | undefined | null): Promise<BasetenLedger> {
+  const job = queue.then(async () => {
+    const l = await readBaseten();
+    l.spentUsd += usd;
+    l.calls += 1;
+    l.promptTokens += usage?.prompt_tokens ?? 0;
+    l.completionTokens += usage?.completion_tokens ?? 0;
+    l.reasoningTokens += usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+    l.updatedAt = new Date().toISOString();
+    await fs.mkdir(path.dirname(BASETEN_LEDGER), { recursive: true });
+    await fs.writeFile(BASETEN_LEDGER, JSON.stringify(l, null, 2));
+    return l;
+  });
+  queue = job.catch(() => undefined);
+  return job;
+}

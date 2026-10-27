@@ -60,9 +60,12 @@ Would the engine have seen it coming? `POST /api/analyze` accepts `asOf: "YYYYMM
 
 We ran 14 AppSumo deals that later shut down, revoked lifetime access or cut limits (dated AppSumo notices or buyer reports), 90 days before each event, plus 8 controls still healthy in Oct 2026, as of 1 Aug 2024. Production thresholds, no recalibration. Results (`src/backtest/results.json`): 6 of 13 scored failures scored above 30 (Wait on the evidence), 12 of 13 were not rated Buy (6 of those were set by evidence guards: unreadable terms, zero reviews, or unreachable vendor site, not by the score), 1 was rated Buy (Notice). Controls: 1 of 6 rated Buy, 3 of 6 scored above 30. At this sample size the score does not separate failures from survivors; the engine is cautious for both. 3 cases could not be scored because the Internet Archive rate-limited us mid-run. Total model spend for the backtest: about $1.
 
-## Models (Meta Model API)
-- Judge: `muse-wonder-1.0`
-- Prosecutor / Defender / Extractor: `muse-spark-1.3-contributor`, or `muse-spark-1.3` with `MODEL_MODE=demo`
+## Models (two models, two providers)
+- Judge: `muse-wonder-1.0` on the Meta Model API, always.
+- Prosecutor / Defender: Muse Spark Open (`meta-models/muse-spark-open-1026`) on Baseten when `BASETEN_API_KEY` is set. If a Baseten call errors, times out, hits its token limit or returns invalid JSON twice, that call reruns on Meta Spark and the report lists the fallback. `SPARK_PROVIDER=meta` keeps them on Meta.
+- Extractor (claims, fine print, review themes): Meta `muse-spark-1.3-contributor`, or `muse-spark-1.3` with `MODEL_MODE=demo`. Also used as the advocates' fallback.
+- The report footer names the model and provider that ran each role. Every quote is still checked verbatim in code, and the score is still computed in code.
+- A/B on 6 deals (Oct 27): advocates on Baseten gave the same verdicts, a 97% vs 99% exhibit quote-verification rate, no invalid JSON and courtroom time down from about 32 s to 20 s. Moving extraction to Baseten too dropped its quote pass rate from 98% to 90%, so extraction stays on Meta (`SPARK_ROLES` can add it).
 
 ## API
 - `POST /api/analyze` `{ "url": "...", "vendorUrl?": "...", "fresh?": true, "asOf?": "YYYYMMDD" }` → full report (risk, signals with receipts, claims, fine print, courtroom, reviews, trace, sources, cost)
@@ -72,6 +75,7 @@ We ran 14 AppSumo deals that later shut down, revoked lifetime access or cut lim
 
 ## Safety rails
 - `BUDGET_USD` (default 140): Meta's spend limit is an alert, not a cap, so every call is priced from its `usage` and calls stop past the budget (HTTP 402).
+- `BASETEN_BUDGET_USD` (default 50): Baseten spend has its own ledger (`.data/usage-baseten.json`, priced at Baseten's $1.25 / $0.15 cached / $4.25 per 1M tokens, with token counts) and never counts toward `BUDGET_USD`. At the cap, advocate calls go to Meta.
 - `RATE_LIMIT_PER_HOUR` (default 10) per IP (HTTP 429).
 - Finished reports cached 24 h; `fresh: true` bypasses.
 

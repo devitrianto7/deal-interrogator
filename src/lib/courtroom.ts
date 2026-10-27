@@ -41,6 +41,8 @@ export interface Courtroom {
   droppedExhibits: { side: Side; claimId: string; source: string; quote: string; reason: string }[];
   costUsd: number;
   models: { prosecutor: string; defender: string; judge: string } | null;
+  basetenUsd?: number; // Baseten spend, kept apart from costUsd (Meta)
+  fallbacks?: string[]; // Baseten calls that fell back to Meta
 }
 
 const MAX_CLAIMS = 6;
@@ -218,6 +220,8 @@ export async function holdTrial(bundle: EvidenceBundle, claims: Claim[]): Promis
     trials,
     droppedExhibits,
     costUsd: pRes.costUsd + dRes.costUsd + jRes.costUsd,
-    models: { prosecutor: pRes.model, defender: dRes.model, judge: jRes.model },
+    models: { prosecutor: pRes.label, defender: dRes.label, judge: jRes.label },
+    basetenUsd: pRes.basetenUsd + dRes.basetenUsd,
+    fallbacks: [pRes.fallback, dRes.fallback].filter(Boolean) as string[],
   };
 }

@@ -77,6 +77,7 @@ async function runPipeline(url: string, opts: Opts) {
     refMs,
   );
   const d = bundle.deal;
+  const fallbacks = [...(extraction.fallbacks ?? []), ...(reviews.fallback ? [reviews.fallback] : []), ...(court.fallbacks ?? [])];
   return {
     asOf: opts.asOf ?? null,
     deal: {
@@ -98,10 +99,12 @@ async function runPipeline(url: string, opts: Opts) {
     reviews,
     trace,
     sources: bundle.docs.map((x) => ({ kind: x.kind, url: x.url, title: x.title, chars: x.chars, ...(x.capturedAt ? { capturedAt: x.capturedAt } : {}), ...(x.via ? { via: x.via } : {}) })),
-    warnings: [...bundle.warnings, ...(trace?.errors ?? [])],
+    warnings: [...bundle.warnings, ...(trace?.errors ?? []), ...fallbacks.map((f) => `Model fallback: ${f}`)],
     dropped: extraction.dropped,
-    costUsd: Math.round((extraction.costUsd + reviews.costUsd + court.costUsd) * 1e6) / 1e6,
+    costUsd: Math.round((extraction.costUsd + reviews.costUsd + court.costUsd) * 1e6) / 1e6, // Meta
+    basetenUsd: Math.round(((extraction.basetenUsd ?? 0) + (reviews.basetenUsd ?? 0) + (court.basetenUsd ?? 0)) * 1e6) / 1e6,
     models: extraction.models,
+    fallbacks,
     ms: Date.now() - started,
   };
 }

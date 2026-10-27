@@ -7,6 +7,8 @@ export const PRICES: Record<string, Price> = {
   "muse-spark-1.3-contributor": { input: 0.1, cachedInput: 0.002, output: 0.2 },
   "muse-spark-1.2": { input: 1.25, cachedInput: 0.15, output: 4.25 },
   "muse-spark-1.2-contributor": { input: 0.1, cachedInput: 0.002, output: 0.2 },
+  // Baseten Model APIs, from https://www.baseten.co/library/muse-spark-open (checked 2026-10-27).
+  "meta-models/muse-spark-open-1026": { input: 1.25, cachedInput: 0.15, output: 4.25 },
 };
 
 export type Usage = {

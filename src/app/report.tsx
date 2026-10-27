@@ -356,8 +356,19 @@ export function ReportView({ report, onRerun }: { report: Report; onRerun: () =>
           {report.cached ? "Cached report" : "Fresh run"}
           {report.generatedAt ? ` · ${new Date(report.generatedAt).toLocaleString()}` : ""}
         </span>
-        <span>Model cost ${report.costUsd.toFixed(4)}</span>
-        {courtroom.models && <span>Judge {courtroom.models.judge} · Advocates {courtroom.models.prosecutor}</span>}
+        <span>
+          Model cost ${report.costUsd.toFixed(4)}
+          {report.basetenUsd ? ` Meta + $${report.basetenUsd.toFixed(4)} Baseten` : ""}
+        </span>
+        {courtroom.models && (
+          <span>
+            Judge {courtroom.models.judge} · Prosecutor {courtroom.models.prosecutor} · Defender {courtroom.models.defender}
+          </span>
+        )}
+        {report.models?.length > 0 && <span>Extraction {report.models.join(", ")}</span>}
+        {report.fallbacks && report.fallbacks.length > 0 && (
+          <span title={report.fallbacks.join("\n")}>{report.fallbacks.length} call(s) fell back to Meta</span>
+        )}
         <span>{(report.ms / 1000).toFixed(0)}s</span>
         <span>{report.dropped.length + courtroom.droppedExhibits.length} unverifiable quotes discarded</span>
         <button onClick={onRerun} className="underline hover:text-ink">

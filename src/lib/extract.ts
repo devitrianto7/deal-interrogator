@@ -55,7 +55,9 @@ export interface Extraction {
   finePrint: FinePrint[];
   dropped: Dropped[];
   costUsd: number;
+  basetenUsd?: number;
   models: string[];
+  fallbacks?: string[];
 }
 
 const DOC_BUDGET = 45_000; // chars per doc sent to the model
@@ -183,6 +185,8 @@ export async function extract(bundle: EvidenceBundle): Promise<Extraction> {
     finePrint,
     dropped,
     costUsd: cRes.costUsd + (fRes?.costUsd ?? 0),
-    models: [...new Set([cRes.model, fRes?.model].filter(Boolean) as string[])],
+    basetenUsd: cRes.basetenUsd + (fRes?.basetenUsd ?? 0),
+    models: [...new Set([cRes.label, fRes?.label].filter(Boolean) as string[])],
+    fallbacks: [cRes.fallback, fRes?.fallback].filter(Boolean) as string[],
   };
 }
