@@ -20,6 +20,11 @@ Lifetime deals are cheap until they aren't: "lifetime" quietly means "lifetime o
 
 These three reports are pinned in `src/demo/` so the demo is stable. Any other URL runs live (about 45-60 s, roughly $0.02-0.04 per deal).
 
+## The Docket
+**https://deal.nogap.tech/docket** lists about 200 live AppSumo lifetime deals already judged by the same engine, with verdict counts, Buy/Wait/Skip filters, sorting by risk score, and each deal's top two signals with a verified quote. Every row opens the full report (`/docket/<slug>`, statically generated), where "Run fresh" re-tries the case live.
+
+Deals were picked from AppSumo's public deals API: currently on sale, "Lifetime access" in the terms, and the most reviews. Summaries live in `src/docket/index.json` and full reports in `src/docket/<slug>.json`; they are snapshots dated in each report.
+
 ## How it works
 ```
 URL ─► 1 Collect ─► 2 Extract ─► 3 Verify quotes ─► 4 Score (code) ─► Verdict

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { DealReport } from "@/lib/pipeline";
 import { ReportView } from "./report";
@@ -76,6 +77,12 @@ export default function Home() {
           Paste a lifetime-deal URL. We put the seller&apos;s claims on trial against the vendor&apos;s own pricing, terms
           and refund policy, and what buyers say in reviews. Every point in the score carries a quote checked word for
           word against its source.
+        </p>
+        <p className="mt-3 text-sm">
+          <Link href="/docket" className="font-semibold underline hover:text-muted">
+            Browse The Docket →
+          </Link>{" "}
+          <span className="text-muted">about 200 live AppSumo deals, already judged.</span>
         </p>
       </header>
 
