@@ -33,6 +33,10 @@ const fp = (x: FinePrint): Evidence => ({ source: x.quote.doc, quote: x.quote.te
 const rv = (t: ReviewTheme | undefined, n = 3): Evidence[] =>
   (t?.hits ?? []).slice(0, n).map((h) => ({ source: "review", quote: h.quote, url: h.url }));
 const theme = (r: ReviewAnalysis, k: string) => r.themes.find((t) => t.theme === k);
+// The review sample deliberately over-samples 1-3 star reviews, so a raw hit count
+// overstates problems on deals with hundreds of reviews. Judge hits as a share of all reviews.
+const share = (r: ReviewAnalysis, n: number) => (r.stats?.count ? n / r.stats.count : n > 0 ? 1 : 0);
+const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 const yearsSince = (d: string | null) => (d ? (Date.now() - Date.parse(d)) / (365.25 * 864e5) : null);
 
 const PRODUCT_LIFETIME = /lifetime of (the )?(product|service|company|business|platform|plan|software|app)|as long as (the )?(product|service|company)|product('s)? lifetime/i;
@@ -56,8 +60,12 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
     let points = 0;
     let finding = "No clause limits what \"lifetime\" means.";
     let evidence: Evidence[] = [];
-    if (revokedN >= 3) {
+    if (revokedN >= 3 && share(rev, revokedN) >= 0.02) {
       points = 20;
+      finding = `${revokedN} low-star reviews (${pct(share(rev, revokedN))} of all) say lifetime access was cut back or moved behind a subscription.`;
+      evidence = rv(revoked);
+    } else if (revokedN >= 2) {
+      points = 10;
       finding = `${revokedN} low-star reviews say lifetime access was cut back or moved behind a subscription.`;
       evidence = rv(revoked);
     } else if (productLife) {
@@ -93,7 +101,7 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
       evidence = caps.slice(0, 2).map(fp);
     }
     if (shrunk && shrunk.hits.length >= 2) {
-      points = Math.min(15, points + 8);
+      points = Math.min(15, points + (share(rev, shrunk.hits.length) >= 0.015 ? 8 : 4));
       const r = `${shrunk.hits.length} reviews say limits were reduced.`;
       finding = points > 8 ? `${finding} ${r}` : r;
       evidence.push(...rv(shrunk, 2));
@@ -105,13 +113,14 @@ export function scoreRisk(deal: DealInfo, ex: Extraction, rev: ReviewAnalysis, t
   {
     const t = theme(rev, "support_gone");
     const n = t?.hits.length ?? 0;
-    const points = n >= 3 ? 15 : n === 2 ? 8 : n === 1 ? 4 : 0;
+    const sh = share(rev, n);
+    const points = n === 0 ? 0 : sh >= 0.03 ? 15 : sh >= 0.015 ? 8 : 4;
     signals.push({
       key: "support",
       label: "Support complaints",
       max: 15,
       points,
-      finding: n ? `${n} review${n > 1 ? "s" : ""} say support is slow or gone.` : "No reviews complain about support.",
+      finding: n ? `${n} review${n > 1 ? "s" : ""} (${pct(sh)} of all) say support is slow or gone.` : "No reviews complain about support.",
       evidence: rv(t),
     });
   }
