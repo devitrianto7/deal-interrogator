@@ -16,8 +16,20 @@ const REPORT_TTL_MS = 24 * 3_600_000;
 const reportFile = (url: string, vendorUrl?: string) =>
   path.join(REPORT_DIR, createHash("sha256").update(`${url}|${vendorUrl ?? ""}`).digest("hex").slice(0, 24) + ".json");
 
+// Demo cases ship with the repo (src/demo/*.json) so judges get an instant, stable report.
+// "Run fresh" still re-runs the whole pipeline live.
+const DEMO_DIR = path.join(process.cwd(), "src", "demo");
+const demoSlug = (url: string) => url.match(/appsumo\.com\/products\/([a-z0-9-]+)/i)?.[1]?.toLowerCase();
+
 export async function analyzeDeal(url: string, opts: { fresh?: boolean; vendorUrl?: string } = {}) {
   const file = reportFile(url, opts.vendorUrl);
+  const slug = demoSlug(url);
+  if (!opts.fresh && slug && !opts.vendorUrl) {
+    try {
+      const pinned = JSON.parse(await readFile(path.join(DEMO_DIR, `${slug}.json`), "utf8")) as Report & { generatedAt: string };
+      return { ...pinned, cached: true, pinned: true };
+    } catch {}
+  }
   if (!opts.fresh) {
     try {
       const cached = JSON.parse(await readFile(file, "utf8")) as Report & { generatedAt: string };

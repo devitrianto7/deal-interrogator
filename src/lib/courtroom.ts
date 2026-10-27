@@ -69,7 +69,7 @@ export function pickClaims(claims: Claim[]): Claim[] {
   const perCat = new Map<string, number>();
   for (const c of sorted) {
     const n = perCat.get(c.category) ?? 0;
-    if (n >= 2) continue; // spread the trial across kinds of promises
+    if (n >= (c.category === "feature" ? 3 : 2)) continue; // spread the trial across kinds of promises
     perCat.set(c.category, n + 1);
     out.push(c);
     if (out.length === MAX_CLAIMS) break;
@@ -100,6 +100,7 @@ Rules of evidence:
 - "confirmed": a defense exhibit directly supports the claim and no prosecution exhibit materially undercuts it. Cite it.
 - "unverifiable": the exhibits are missing, off-topic, or too weak either way.
 - Binding terms (terms, refund) outweigh marketing pages; several consistent reviews outweigh one.
+- The vendor's regular subscription prices for ordinary customers are NOT evidence against a deal-specific promise (a lifetime deal exists precisely because others pay monthly). Only count them if they show deal buyers are being charged or moved to them.
 - "reasoning" is one or two plain sentences a buyer understands, naming what the exhibits show.
 - Rule on every claim_id.`;
 
