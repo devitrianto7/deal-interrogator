@@ -278,6 +278,11 @@ export function scoreRisk(
     verdict = "Wait";
     verdictNote = `Score is low, but the ${coverage.missing.join(", ")} could not be read, so the low score is not proof of safety.`;
   }
+  // No buyer reviews at all: the fine print alone cannot vouch for how the vendor treats lifetime buyers.
+  if (verdict === "Buy" && coverage.reviews === 0) {
+    verdict = "Wait";
+    verdictNote = `The fine print looks clean (${score}/100), but there are no buyer reviews to show how the vendor treats lifetime customers, so this is not a Buy yet.`;
+  }
   // Never imply a clean bill of health when the vendor's own pages were never read.
   // Skip stands: evidence against the deal was found even without them.
   if (!vendorReached && verdict !== "Skip") {

@@ -20,7 +20,8 @@ function getClient(): OpenAI {
   if (!client) {
     const apiKey = process.env.MODEL_API_KEY;
     if (!apiKey) throw new Error("MODEL_API_KEY is not set");
-    client = new OpenAI({ baseURL: "https://api.meta.ai/v1", apiKey });
+    // Cap a stalled call: the SDK default is 10 minutes with 2 retries.
+    client = new OpenAI({ baseURL: "https://api.meta.ai/v1", apiKey, timeout: 90_000, maxRetries: 1 });
   }
   return client;
 }
