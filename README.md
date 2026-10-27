@@ -45,3 +45,7 @@ Runs alongside extraction in `/api/extract` and returns `reviews`:
 
 - **Numbers from code**: rating distribution, share of 1-2 star reviews, and the newest-first page's average vs the all-time average (AppSumo's public reviews API serves one page of 20 newest, plus up to 20 per star rating; it does not paginate further).
 - **Themes from Spark**: support gone, limits shrunk, features paywalled, bugs, not as advertised, pricing/billing, and the positive ones. Each hit quotes the review verbatim and is checked against that review's text; hits from the product's earlier AppSumo campaigns are flagged.
+
+## Risk score (S4)
+
+`POST /api/analyze { url }` runs the whole pipeline and returns `risk: { score, verdict, signals[] }`. The score is computed in `src/lib/score.ts` from verified evidence only, across 8 signals (100 points): lifetime definition 20, hidden caps 15, support complaints 15, review trend 10, tier trap 10, vendor age and track record 10 (RDAP registration date, first Wayback capture, earlier AppSumo campaigns), discount size 10, one-sided change clauses 10. Verdict: 0-30 Buy, 31-60 Wait, 61-100 Skip. Every signal lists its finding and the quotes or public records behind it.
