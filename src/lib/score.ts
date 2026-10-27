@@ -173,7 +173,7 @@ export function scoreRisk(
       max: 10,
       points,
       finding,
-      evidence: rev.stats ? [{ source: "review", quote: `${rev.stats.count} reviews, average ${rev.stats.average}/5`, url: deal.url }] : [],
+      evidence: rev.stats ? [{ source: "stats", quote: `${rev.stats.count} reviews, average ${rev.stats.average}/5`, url: deal.url }] : [],
     });
   }
 
