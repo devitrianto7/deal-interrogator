@@ -4,6 +4,7 @@ import { extract } from "./extract";
 import { analyzeReviews } from "./reviews";
 import { vendorTrace } from "./trace";
 import { scoreRisk } from "./score";
+import { holdTrial } from "./courtroom";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -34,8 +35,11 @@ type Report = Awaited<ReturnType<typeof runPipeline>>;
 async function runPipeline(url: string, opts: { fresh?: boolean; vendorUrl?: string }) {
   const started = Date.now();
   const bundle = await collectEvidence(url, opts);
-  const [extraction, reviews, trace] = await Promise.all([
-    extract(bundle),
+  // The trial needs the extracted claims, so it chains on extraction while reviews and RDAP run alongside.
+  const extracting = extract(bundle);
+  const [extraction, court, reviews, trace] = await Promise.all([
+    extracting,
+    extracting.then((ex) => holdTrial(bundle, ex.claims)),
     analyzeReviews(bundle.deal),
     bundle.deal.vendorUrl ? vendorTrace(bundle.deal.vendorUrl) : Promise.resolve(null),
   ]);
@@ -57,12 +61,13 @@ async function runPipeline(url: string, opts: { fresh?: boolean; vendorUrl?: str
     risk,
     claims: extraction.claims,
     finePrint: extraction.finePrint,
+    courtroom: court,
     reviews,
     trace,
     sources: bundle.docs.map((x) => ({ kind: x.kind, url: x.url, title: x.title, chars: x.chars })),
     warnings: [...bundle.warnings, ...(trace?.errors ?? [])],
     dropped: extraction.dropped,
-    costUsd: Math.round((extraction.costUsd + reviews.costUsd) * 1e6) / 1e6,
+    costUsd: Math.round((extraction.costUsd + reviews.costUsd + court.costUsd) * 1e6) / 1e6,
     models: extraction.models,
     ms: Date.now() - started,
   };
