@@ -10,6 +10,7 @@ import { archiveFetch, asOfCutoff } from "./wayback";
 import { cap, extractLinks, htmlToText, normalize, type FoundLink } from "./extract";
 import { isAppSumoUrl, parseAppSumo } from "./appsumo";
 import { findCandidates } from "./discover";
+import { parseMarketplaceReviews } from "./marketreviews";
 import {
   guessVendorDomain,
   isMarketplaceUrl,
@@ -327,7 +328,12 @@ export async function collectEvidence(
   const docs: SourceDoc[] = [];
 
   // 1. Deal page
-  const dealRes = await get(inputUrl);
+  let dealRes = await get(inputUrl);
+  // Some marketplaces (RocketHub) shield Node's TLS fingerprint but serve curl.
+  if (ctx.live && (dealRes.status === 403 || dealRes.status === 429)) {
+    const viaCurl = await curlFetch(inputUrl).catch(() => null);
+    if (viaCurl?.status === 200) dealRes = viaCurl;
+  }
   if (opts.asOf && dealRes.status === 404 && !dealRes.body)
     throw new DealUnavailableError(`No Wayback capture of the deal page before ${opts.asOf}.`);
   if (dealRes.status !== 200) throw new DealUnavailableError(`Deal page returned HTTP ${dealRes.status}`);
@@ -348,6 +354,9 @@ export async function collectEvidence(
     const { title, text } = htmlToText(dealRes.body);
     const name = productName(dealRes.body, dealRes.finalUrl);
     deal = { ...genericDeal(dealRes.finalUrl, name, []), ...marketplaceTerms(text), vendorUrl: null };
+    // Buyer reviews the marketplace page itself shows (JSON-LD or Judge.me).
+    const mr = parseMarketplaceReviews(dealRes.body, dealView);
+    if (mr) Object.assign(deal, mr);
     if (!opts.vendorUrl) {
       const ranked = rankVendorLinks(extractLinks(dealRes.body, dealRes.finalUrl), dealRes.finalUrl, name);
       // Guessing a domain probes the live web, so as-of mode skips it.
