@@ -6,7 +6,7 @@ import type { DocketEntry } from "./types";
 
 export const metadata: Metadata = {
   title: "The Docket · Deal Interrogator",
-  description: "Live AppSumo lifetime deals, each cross-examined and ruled Buy, Wait or Skip with quoted receipts.",
+  description: "Live lifetime deals from AppSumo and other marketplaces, each cross-examined and ruled Buy, Wait or Skip with quoted receipts.",
 };
 
 const entries = docket as DocketEntry[];
@@ -31,7 +31,7 @@ export default function DocketPage() {
         </p>
         <h1 className="mt-2 font-serif text-4xl sm:text-5xl">The Docket</h1>
         <p className="mt-3 max-w-2xl text-muted">
-          {entries.length} live AppSumo lifetime deals, each put on trial by the same engine: claims cross-examined
+          {entries.length} live lifetime deals from AppSumo, StackSocial, RocketHub, Dealify, DealMirror and Earlybird, each put on trial by the same engine: claims cross-examined
           against the vendor&apos;s own pricing, terms and refund policy, and buyer reviews. Every point in a score
           carries a quote checked word for word against its source.
         </p>
